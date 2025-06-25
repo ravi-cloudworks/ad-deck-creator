@@ -6,8 +6,6 @@ let masterVideoElement = null;
 let videoSegments = [];
 let videoLoaded = false;
 let currentVideoUrl = null;
-let frontCoverUrl = null;
-let backCoverUrl = null;
 
 // Initialize video functionality
 function initVideoSlides() {
@@ -33,8 +31,6 @@ function initVideoSlides() {
 function checkVideoUrlParameter() {
     const urlParams = new URLSearchParams(window.location.search);
     const videoUrl = urlParams.get('video_url');
-    frontCoverUrl = urlParams.get('front_cover');
-    backCoverUrl = urlParams.get('back_cover');
     
     if (videoUrl) {
         console.log('Video URL found:', videoUrl);
@@ -292,44 +288,21 @@ function createSlidesFromSegments() {
         console.log('No video segments to create slides from');
         return;
     }
-
-    // Clear existing slides in DOM and array
-    const slideContainer = document.getElementById('slideContainer');
-    if (slideContainer) slideContainer.innerHTML = '';
-    slides.length = 0;
-
+    
+    console.log('Creating slides from segments...');
+    
+    // Clear existing slides first (optional - for clean start)
+    // clearAllSlides();
+    
     // Create slides for each segment
     videoSegments.forEach((segment, index) => {
         createSlideFromSegment(segment, index);
     });
-
-    // Set background image for first and last slide if cover URLs are present
-    if (slides.length > 0) {
-        if (frontCoverUrl) {
-            slides[0].backgroundImage = frontCoverUrl;
-            const firstSlideElement = document.getElementById(slides[0].id);
-            if (firstSlideElement) {
-                firstSlideElement.style.backgroundImage = `url(${frontCoverUrl})`;
-                firstSlideElement.style.backgroundSize = 'cover';
-                firstSlideElement.style.backgroundPosition = 'center';
-                firstSlideElement.style.backgroundRepeat = 'no-repeat';
-            }
-        }
-        if (backCoverUrl && slides.length > 1) {
-            slides[slides.length - 1].backgroundImage = backCoverUrl;
-            const lastSlideElement = document.getElementById(slides[slides.length - 1].id);
-            if (lastSlideElement) {
-                lastSlideElement.style.backgroundImage = `url(${backCoverUrl})`;
-                lastSlideElement.style.backgroundSize = 'cover';
-                lastSlideElement.style.backgroundPosition = 'center';
-                lastSlideElement.style.backgroundRepeat = 'no-repeat';
-            }
-        }
-    }
-
+    
+    // Update UI
     updateSlideList();
     updateNavigation();
-
+    
     console.log(`Created ${videoSegments.length} slides from video segments`);
 }
 
@@ -934,13 +907,6 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
         
-        if (currentSlide.isFrontCover || currentSlide.isBackCover) {
-            // Hide customize controls
-            if (editActions) editActions.style.display = 'none';
-            // Optionally hide other controls/tabs as well
-            return;
-        }
-        
     } catch (error) {
         console.error('Error updating tabs:', error);
     }
@@ -977,6 +943,96 @@ function toggleAccordion(accordionId) {
         
     } catch (error) {
         console.error('Error toggling accordion:', error);
+    }
+}
+
+// Update tabs based on current slide type
+function updateTabsForCurrentSlide() {
+    try {
+        const currentSlide = slides[currentSlideIndex];
+        if (!currentSlide) return;
+        
+        const chartTab = document.getElementById('chartTab');
+        const videoTab = document.getElementById('videoTab');
+        const commonTab = document.getElementById('commonTab');
+        const editCurrentVideoSection = document.getElementById('editCurrentVideoSection');
+        const editCurrentImageSection = document.getElementById('editCurrentImageSection');
+        const noSlideSelected = document.getElementById('noSlideSelected');
+        
+        if (!chartTab || !videoTab || !commonTab) return;
+        
+        console.log('Updating tabs for slide type:', currentSlide.chartType);
+        
+        if (currentSlide.isVideoSlide) {
+            // Video or Image slide
+            chartTab.style.display = 'none';
+            videoTab.style.display = 'block';
+            commonTab.style.display = 'block';
+            
+            // Show appropriate edit section based on slide type
+            if (currentSlide.videoSegment && currentSlide.videoSegment.type === 'video') {
+                // Video slide - show video edit section
+                if (editCurrentVideoSection) {
+                    editCurrentVideoSection.style.display = 'block';
+                    setupEditVideoSection(currentSlide);
+                }
+                if (editCurrentImageSection) {
+                    editCurrentImageSection.style.display = 'none';
+                }
+                if (noSlideSelected) {
+                    noSlideSelected.style.display = 'none';
+                }
+            } else if (currentSlide.videoSegment && currentSlide.videoSegment.type === 'image') {
+                // Image slide - show image edit section
+                if (editCurrentImageSection) {
+                    editCurrentImageSection.style.display = 'block';
+                    setupEditImageSection(currentSlide);
+                }
+                if (editCurrentVideoSection) {
+                    editCurrentVideoSection.style.display = 'none';
+                }
+                if (noSlideSelected) {
+                    noSlideSelected.style.display = 'none';
+                }
+            } else {
+                // Hide both edit sections, show message
+                if (editCurrentVideoSection) {
+                    editCurrentVideoSection.style.display = 'none';
+                }
+                if (editCurrentImageSection) {
+                    editCurrentImageSection.style.display = 'none';
+                }
+                if (noSlideSelected) {
+                    noSlideSelected.style.display = 'block';
+                }
+            }
+            
+            // Auto-switch to video tab
+            switchTab('video');
+            
+        } else {
+            // Chart slide
+            chartTab.style.display = 'block';
+            videoTab.style.display = 'none';
+            commonTab.style.display = 'block';
+            
+            // Hide edit sections, show message
+            if (editCurrentVideoSection) {
+                editCurrentVideoSection.style.display = 'none';
+            }
+            if (editCurrentImageSection) {
+                editCurrentImageSection.style.display = 'none';
+            }
+            if (noSlideSelected) {
+                noSlideSelected.style.display = 'block';
+            }
+            
+            // Auto-switch to chart tab
+            switchTab('chart');
+        }
+        
+    } catch (error) {
+        console.error('Error updating tabs:', error);
     }
 }
 
@@ -1797,23 +1853,4 @@ function createImageSlide() {
         console.error('Error creating image slide:', error);
         alert('Error creating image slide. Please try again.');
     }
-}
-
-
-function getDeckSlideCountWithoutCovers() {
-    return slides.filter(slide => !slide.isFrontCover && !slide.isBackCover).length;
-}
-
-const count = getDeckSlideCountWithoutCovers();
-console.log('Slides (excluding covers):', count);
-
-function handleBackgroundUpload(event) {
-    // ...existing code...
-    // Prevent changing background for cover slides
-    if ((currentSlideIndex === 0 && frontCoverUrl) ||
-        (currentSlideIndex === slides.length - 1 && backCoverUrl)) {
-        alert("Cannot change background of cover slide.");
-        return;
-    }
-    // ...existing code...
 }
