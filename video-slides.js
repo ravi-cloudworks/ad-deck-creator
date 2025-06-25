@@ -9,40 +9,251 @@ let currentVideoUrl = null;
 
 // Initialize video functionality
 function initVideoSlides() {
-    console.log('Initializing video slides module...');
-    
+    console.log('\n🚀 STARTING initVideoSlides');
+    debugSlideState('BEFORE video initialization');
+
     // Get master video element
     masterVideoElement = document.getElementById('masterVideo');
     if (!masterVideoElement) {
-        console.error('Master video element not found');
+        console.error('❌ Master video element not found');
         return;
     }
-    
+
     // Check for video URL parameter
     checkVideoUrlParameter();
-    
+
     // Setup video event listeners
     setupVideoEventListeners();
-    
-    console.log('Video slides module initialized');
+
+    console.log('✅ Video slides module initialized');
+    debugSlideState('AFTER video initialization');
 }
 
-// Check URL parameters for video_url
+// MODIFIED: Check video URL parameter with debug
 function checkVideoUrlParameter() {
+    console.log('\n🔍 Checking URL parameters...');
+    
     const urlParams = new URLSearchParams(window.location.search);
     const videoUrl = urlParams.get('video_url');
-    
+    const frontCover = urlParams.get('front_cover');
+    const backCover = urlParams.get('back_cover');
+    const backgroundImage = urlParams.get('background_image');
+
+    console.log('URL Parameters found:', {
+        video_url: videoUrl,
+        front_cover: frontCover,
+        back_cover: backCover,
+        background_image: backgroundImage
+    });
+
+    // Apply background image if provided
+    if (backgroundImage) {
+        console.log('🖼️ Background image URL found, loading...');
+        loadBackgroundFromUrl(backgroundImage);
+    }
+
     if (videoUrl) {
-        console.log('Video URL found:', videoUrl);
+        console.log('📹 Video URL found, loading video...');
         loadVideoFromUrl(videoUrl);
     } else {
-        console.log('No video URL parameter found');
+        console.log('📊 No video URL parameter found, keeping chart slides');
+    }
+}
+
+function loadBackgroundFromUrl(imageUrl) {
+    try {
+        console.log('🖼️ Loading background image from URL:', imageUrl);
+        
+        // Create a temporary image element to load the URL
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Handle CORS if needed
+        
+        img.onload = function() {
+            // Convert image to canvas then to data URL (same format as file upload)
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            // Convert to data URL (same format as FileReader)
+            const dataUrl = canvas.toDataURL('image/png');
+            
+            // Create a fake file-like object
+            const fakeFile = {
+                type: 'image/png'
+            };
+            
+            // Reuse the existing background handling logic
+            const reader = {
+                result: dataUrl,
+                onload: function() {
+                    // Call the existing handleBackgroundFile logic directly
+                    globalBackgroundImage = this.result;
+                    
+                    // Apply background to all existing slides EXCEPT cover slides
+                    slides.forEach(slide => {
+                        // Skip cover slides - they keep their own backgrounds
+                        if (slide.isCoverSlide) {
+                            console.log('Skipping background update for cover slide:', slide.title);
+                            return;
+                        }
+                        
+                        slide.backgroundImage = globalBackgroundImage;
+                        const slideElement = document.getElementById(slide.id);
+                        if (slideElement) {
+                            slideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
+                            slideElement.style.backgroundSize = 'cover';
+                            slideElement.style.backgroundPosition = 'center';
+                            slideElement.style.backgroundRepeat = 'no-repeat';
+                        }
+                    });
+                    
+                    if (typeof updateSlideList === 'function') {
+                        updateSlideList();
+                    }
+                    if (typeof updateChart === 'function') {
+                        updateChart();
+                    }
+                    
+                    console.log('✅ Background image applied from URL');
+                }
+            };
+            
+            // Trigger the existing logic
+            reader.onload();
+        };
+        
+        img.onerror = function() {
+            console.error('❌ Failed to load background image from URL:', imageUrl);
+        };
+        
+        // Start loading the image
+        img.src = imageUrl;
+        
+    } catch (error) {
+        console.error('❌ Error loading background from URL:', error);
+    }
+}
+
+// Add these new functions here:
+// Check for cover images in URL parameters
+function checkCoverParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const frontCover = urlParams.get('front_cover');
+    const backCover = urlParams.get('back_cover');
+
+    return { frontCover, backCover };
+}
+
+function debugSlideState(location) {
+    console.log(`\n=== SLIDE DEBUG: ${location} ===`);
+    console.log('Total slides:', slides.length);
+    console.log('Current slide index:', currentSlideIndex);
+    
+    slides.forEach((slide, index) => {
+        console.log(`Slide ${index}:`, {
+            id: slide.id,
+            title: slide.title,
+            chartType: slide.chartType,
+            isVideoSlide: slide.isVideoSlide || false,
+            isCoverSlide: slide.isCoverSlide || false,
+            coverPosition: slide.coverPosition || 'n/a'
+        });
+    });
+    
+    // Check DOM elements
+    const slideElements = document.querySelectorAll('.slide');
+    console.log('DOM slide elements:', slideElements.length);
+    slideElements.forEach((el, index) => {
+        console.log(`DOM Slide ${index}:`, {
+            id: el.id,
+            className: el.className,
+            isActive: el.classList.contains('active')
+        });
+    });
+    console.log('=== END SLIDE DEBUG ===\n');
+}
+
+
+
+// Create cover slide
+function createCoverSlide(imageUrl, title, position) {
+    try {
+        console.log(`\n🖼️ Creating ${position} cover slide:`, title);
+        debugSlideState(`BEFORE creating ${position} cover`);
+        
+        const slideId = `cover-slide-${position}-${Date.now()}`;
+
+        const slide = {
+            id: slideId,
+            chartType: 'cover',
+            theme: 'custom',
+            backgroundImage: imageUrl,
+            title: title,
+            customTextColor: null,
+            isCoverSlide: true,
+            coverPosition: position
+        };
+
+        // Create slide element
+        const slideElement = document.createElement('div');
+        slideElement.className = 'slide cover-slide';
+        slideElement.id = slideId;
+        slideElement.innerHTML = `
+            <div class="slide-content">
+                <!-- Empty slide with just background -->
+            </div>
+        `;
+
+        // Apply background image
+        slideElement.style.backgroundImage = `url(${imageUrl})`;
+        slideElement.style.backgroundSize = 'contain';
+        slideElement.style.backgroundPosition = 'center';
+        slideElement.style.backgroundRepeat = 'no-repeat';
+        slideElement.style.backgroundColor = '#000';
+
+        // Add to slide container
+        const slideContainer = document.getElementById('slideContainer');
+        if (slideContainer) {
+            if (position === 'front') {
+                console.log('Inserting front cover at beginning');
+                console.log('Current slide index before insert:', currentSlideIndex);
+                
+                // Insert at beginning of arrays and DOM
+                slides.unshift(slide);
+                slideContainer.insertBefore(slideElement, slideContainer.firstChild);
+                
+                // Update currentSlideIndex for ALL existing slides
+                // Since we inserted at position 0, everything else shifts right
+                currentSlideIndex++;
+                console.log('Current slide index after insert:', currentSlideIndex);
+                
+                // Update the slide order - chart slide is now at index 1
+                console.log('Chart slide is now at index 1 (after front cover)');
+                
+            } else {
+                console.log('Adding back cover at end');
+                slides.push(slide);
+                slideContainer.appendChild(slideElement);
+            }
+        }
+
+        console.log(`✅ Created ${position} cover slide successfully`);
+        debugSlideState(`AFTER creating ${position} cover`);
+
+    } catch (error) {
+        console.error(`❌ Error creating ${position} cover slide:`, error);
     }
 }
 
 // Load video from URL and parse filename for segments
 function loadVideoFromUrl(videoUrl) {
     try {
+        console.log('\n🎬 STARTING loadVideoFromUrl:', videoUrl);
+        debugSlideState('BEFORE loading video');
+        
         currentVideoUrl = videoUrl;
         
         // Extract filename from URL (handle both full URLs and filenames)
@@ -82,11 +293,40 @@ function loadVideoFromUrl(videoUrl) {
         
         // Create slides based on segments
         if (videoSegments.length > 0) {
+            console.log('Creating slides from', videoSegments.length, 'segments...');
             createSlidesFromSegments();
+            
+            // Show appropriate initial slide after all slides are created
+            setTimeout(() => {
+                console.log('Setting up initial slide display...');
+                debugSlideState('BEFORE initial slide display');
+                
+                if (slides.length > 0) {
+                    const { frontCover } = checkCoverParameters();
+                    
+                    if (frontCover) {
+                        // If we have a front cover, start there
+                        console.log('Starting with front cover at index 0');
+                        currentSlideIndex = 0;
+                    } else {
+                        // No front cover, start with chart slide (which should be at index 0)
+                        console.log('No front cover, starting with chart slide at index 0');
+                        currentSlideIndex = 0;
+                    }
+                    
+                    console.log('Showing initial slide at index:', currentSlideIndex);
+                    showSlide(currentSlideIndex);
+                    debugSlideState('AFTER initial slide display');
+                }
+            }, 100);
+        } else {
+            console.log('No video segments found, keeping existing slides');
         }
         
+        console.log('✅ COMPLETED loadVideoFromUrl');
+        
     } catch (error) {
-        console.error('Error loading video from URL:', error);
+        console.error('❌ Error loading video from URL:', error);
     }
 }
 
@@ -96,21 +336,21 @@ function parseVideoSegments(filename) {
     try {
         // Remove file extension
         const nameWithoutExtension = filename.replace(/\.(mp4|mov|avi|mkv)$/i, '');
-        
+
         // Split by underscore to get segments
         const parts = nameWithoutExtension.split('_');
-        
+
         if (parts.length < 2) {
             console.log('No segments found in filename');
             return [];
         }
-        
+
         // First part is campaign name, rest are segments
         const campaignName = parts[0];
         const segmentParts = parts.slice(1);
-        
+
         const segments = [];
-        
+
         segmentParts.forEach((segment, index) => {
             const parsed = parseSegment(segment, index);
             if (parsed) {
@@ -118,9 +358,9 @@ function parseVideoSegments(filename) {
                 segments.push(parsed);
             }
         });
-        
+
         return segments;
-        
+
     } catch (error) {
         console.error('Error parsing video segments:', error);
         return [];
@@ -132,19 +372,19 @@ function parseVideoSegments(filename) {
 function parseSegment(segmentString, index) {
     try {
         const parts = segmentString.split('-');
-        
+
         if (parts.length < 2) {
             console.warn('Invalid segment format:', segmentString);
             return null;
         }
-        
+
         const type = parts[0]; // 'ad' or 'img'
-        
+
         if (type === 'ad' && parts.length >= 3) {
             // Video segment: ad-0s-15s
             const startTime = parseTimeToSeconds(parts[1]);
             const endTime = parseTimeToSeconds(parts[2]);
-            
+
             return {
                 type: 'video',
                 startTime: startTime,
@@ -153,23 +393,23 @@ function parseSegment(segmentString, index) {
                 title: `Video Ad ${index + 1}`,
                 originalSegment: segmentString
             };
-            
+
         } else if (type === 'img' && parts.length >= 2) {
             // Image segment: img-16s
             const time = parseTimeToSeconds(parts[1]);
-            
+
             return {
                 type: 'image',
                 time: time,
                 title: `Campaign Image ${index + 1}`,
                 originalSegment: segmentString
             };
-            
+
         } else {
             console.warn('Unknown segment type or format:', segmentString);
             return null;
         }
-        
+
     } catch (error) {
         console.error('Error parsing segment:', segmentString, error);
         return null;
@@ -181,7 +421,7 @@ function parseTimeToSeconds(timeString) {
     try {
         // Remove 's' suffix
         const cleanTime = timeString.replace('s', '');
-        
+
         // Handle minutes if needed (future enhancement)
         if (cleanTime.includes('m')) {
             const parts = cleanTime.split('m');
@@ -189,10 +429,10 @@ function parseTimeToSeconds(timeString) {
             const seconds = parseInt(parts[1]) || 0;
             return minutes * 60 + seconds;
         }
-        
+
         // Simple seconds
         return parseInt(cleanTime) || 0;
-        
+
     } catch (error) {
         console.error('Error parsing time string:', timeString, error);
         return 0;
@@ -202,32 +442,32 @@ function parseTimeToSeconds(timeString) {
 // Setup video event listeners
 function setupVideoEventListeners() {
     if (!masterVideoElement) return;
-    
-    masterVideoElement.addEventListener('loadedmetadata', function() {
+
+    masterVideoElement.addEventListener('loadedmetadata', function () {
         console.log('Video metadata loaded, duration:', this.duration);
         videoLoaded = true;
-        
+
         // Validate segments against video duration
         validateSegments();
-        
+
         // Add preload for Safari
         preloadVideoForSafari();
     });
-    
-    masterVideoElement.addEventListener('error', function(e) {
+
+    masterVideoElement.addEventListener('error', function (e) {
         console.error('Video loading error:', e);
         alert('Error loading video. Please check the URL and try again.');
     });
-    
-    masterVideoElement.addEventListener('canplay', function() {
+
+    masterVideoElement.addEventListener('canplay', function () {
         console.log('Video can play');
     });
-    
+
     // Safari-specific events
-    masterVideoElement.addEventListener('canplaythrough', function() {
+    masterVideoElement.addEventListener('canplaythrough', function () {
         console.log('Safari: Video can play through');
     });
-    
+
     // Force preload for Safari
     masterVideoElement.preload = 'auto';
     masterVideoElement.load();
@@ -236,15 +476,15 @@ function setupVideoEventListeners() {
 
 function preloadVideoForSafari() {
     if (!masterVideoElement || !currentVideoUrl) return;
-    
+
     console.log('Preloading video for Safari...');
-    
+
     // Force Safari to buffer the video
     masterVideoElement.preload = 'auto';
     masterVideoElement.muted = true;
     masterVideoElement.playsinline = true;
     masterVideoElement.setAttribute('webkit-playsinline', 'true');
-    
+
     // Create a hidden play/pause cycle to force buffering
     const preloadPromise = masterVideoElement.play();
     if (preloadPromise !== undefined) {
@@ -262,10 +502,10 @@ function preloadVideoForSafari() {
 // Validate segments against actual video duration
 function validateSegments() {
     if (!masterVideoElement || !videoLoaded) return;
-    
+
     const videoDuration = masterVideoElement.duration;
     console.log('Validating segments against video duration:', videoDuration);
-    
+
     videoSegments.forEach((segment, index) => {
         if (segment.type === 'video') {
             if (segment.endTime > videoDuration) {
@@ -284,33 +524,61 @@ function validateSegments() {
 
 // Create slides from parsed segments
 function createSlidesFromSegments() {
+    console.log('\n🔍 STARTING createSlidesFromSegments');
+    debugSlideState('BEFORE creating video slides');
+    
     if (videoSegments.length === 0) {
         console.log('No video segments to create slides from');
         return;
     }
-    
+
     console.log('Creating slides from segments...');
+    console.log('Video segments found:', videoSegments.length);
+
+    // Get current slide count to know where to insert
+    const existingSlideCount = slides.length;
+    console.log('Existing slides before video processing:', existingSlideCount);
     
-    // Clear existing slides first (optional - for clean start)
-    // clearAllSlides();
-    
-    // Create slides for each segment
+    // Check for cover images
+    const { frontCover, backCover } = checkCoverParameters();
+    console.log('Cover images:', { frontCover: !!frontCover, backCover: !!backCover });
+
+    // Create front cover if exists (insert at beginning)
+    if (frontCover) {
+        console.log('Creating front cover...');
+        createCoverSlide(frontCover, 'Front Cover', 'front');
+        debugSlideState('AFTER creating front cover');
+    }
+
+    // Create slides for each segment - Insert AFTER chart slide but BEFORE back cover
+    console.log('Creating slides for', videoSegments.length, 'video segments...');
     videoSegments.forEach((segment, index) => {
+        console.log(`Creating slide ${index + 1}/${videoSegments.length} for segment:`, segment.title);
         createSlideFromSegment(segment, index);
     });
     
+    debugSlideState('AFTER creating video segment slides');
+
+    // Create back cover if exists (add at end)
+    if (backCover) {
+        console.log('Creating back cover...');
+        createCoverSlide(backCover, 'Back Cover', 'back');
+        debugSlideState('AFTER creating back cover');
+    }
+
     // Update UI
     updateSlideList();
     updateNavigation();
-    
-    console.log(`Created ${videoSegments.length} slides from video segments`);
-}
 
+    const newSlideCount = slides.length - existingSlideCount;
+    console.log(`✅ COMPLETED: Created ${slides.length} slides total (${existingSlideCount} existing + ${newSlideCount} new)`);
+    debugSlideState('FINAL STATE after createSlidesFromSegments');
+}
 // Create a single slide from a segment
 function createSlideFromSegment(segment, index) {
     try {
         const slideId = `video-slide-${Date.now()}-${index}`;
-        
+
         const slide = {
             id: slideId,
             chartType: segment.type === 'video' ? 'video' : 'image',
@@ -322,15 +590,15 @@ function createSlideFromSegment(segment, index) {
             videoSegment: segment,
             isVideoSlide: true
         };
-        
+
         // Add to slides array (from main script.js)
         slides.push(slide);
-        
+
         // Create slide element
         const slideElement = document.createElement('div');
         slideElement.className = 'slide video-slide';
         slideElement.id = slideId;
-        
+
         if (segment.type === 'video') {
             slideElement.innerHTML = `
                 <div class="slide-content">
@@ -356,7 +624,7 @@ function createSlideFromSegment(segment, index) {
                 </div>
             `;
         }
-        
+
         // Apply background if exists
         if (globalBackgroundImage) {
             slideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
@@ -364,15 +632,15 @@ function createSlideFromSegment(segment, index) {
             slideElement.style.backgroundPosition = 'center';
             slideElement.style.backgroundRepeat = 'no-repeat';
         }
-        
+
         // Add to slide container
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
             slideContainer.appendChild(slideElement);
         }
-        
+
         console.log('Created slide for segment:', segment.title);
-        
+
     } catch (error) {
         console.error('Error creating slide from segment:', error);
     }
@@ -385,10 +653,10 @@ function showVideoSlide(slideIndex) {
         if (!slide || !slide.isVideoSlide || !slide.videoSegment) {
             return false; // Not a video slide
         }
-        
+
         const segment = slide.videoSegment;
         console.log('Showing video slide:', segment.title);
-        
+
         if (segment.type === 'video') {
             // Check if video player already exists
             const existingPlayer = document.getElementById(`player-${slide.id}`);
@@ -406,16 +674,14 @@ function showVideoSlide(slideIndex) {
             // Check if image frame already exists
             const existingFrame = slide.id && document.querySelector(`#${slide.id} .image-frame`);
             if (!existingFrame) {
-                // Create new image frame
-                seekVideoToTime(segment.time);
-                setTimeout(() => {
-                    captureVideoFrame(slide.id, segment);
-                }, 100); // Small delay to ensure seeking completes
+                // Create new image frame with Safari-compatible capture
+                console.log('Creating new image frame for:', segment.title, 'at time:', segment.time);
+                captureVideoFrameSafari(slide.id, segment);
             }
         }
-        
+
         return true; // Successfully handled video slide
-        
+
     } catch (error) {
         console.error('Error showing video slide:', error);
         return false;
@@ -427,24 +693,24 @@ function resetAndPlayVideo(slideId, segment) {
     try {
         const playerVideo = document.getElementById(`player-${slideId}`);
         if (!playerVideo) return;
-        
+
         console.log('Resetting video for replay:', segment.title);
-        
+
         // Remove any existing event listeners to prevent conflicts
         const newPlayerVideo = playerVideo.cloneNode(true);
         playerVideo.parentNode.replaceChild(newPlayerVideo, playerVideo);
-        
+
         // Reset video properties
         newPlayerVideo.currentTime = segment.startTime;
         newPlayerVideo.muted = true;
-        
+
         // Auto-play the reset video
         const playPromise = newPlayerVideo.play();
-        
+
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 console.log('Reset video playing successfully');
-                
+
                 // Re-add stop listener for this segment
                 const stopPlayback = () => {
                     if (newPlayerVideo.currentTime >= segment.endTime) {
@@ -453,14 +719,14 @@ function resetAndPlayVideo(slideId, segment) {
                         console.log('Reset video segment completed');
                     }
                 };
-                
+
                 newPlayerVideo.addEventListener('timeupdate', stopPlayback);
-                
+
             }).catch(error => {
                 console.log('Reset video autoplay prevented:', error);
             });
         }
-        
+
     } catch (error) {
         console.error('Error resetting video:', error);
     }
@@ -472,7 +738,7 @@ function seekVideoToTime(timeInSeconds) {
         console.warn('Video not ready for seeking');
         return;
     }
-    
+
     try {
         masterVideoElement.currentTime = timeInSeconds;
         console.log('Seeked video to:', timeInSeconds, 'seconds');
@@ -489,19 +755,19 @@ function showVideoPlayer(slideId, segment) {
             console.log('Slide element not found:', slideId);
             return;
         }
-        
+
         const placeholder = slideElement.querySelector('.video-placeholder');
         if (!placeholder) {
             console.log('Video placeholder not found - player may already exist');
             return;
         }
-        
+
         console.log('Creating video player for first time:', segment.title);
-        
+
         // Create clean video player container (no controls)
         const playerContainer = document.createElement('div');
         playerContainer.className = 'video-player';
-        
+
         // Clone the master video element instead of creating new (for Safari buffering)
         const playerVideo = masterVideoElement.cloneNode(true);
         playerVideo.id = `player-${slideId}`;
@@ -510,23 +776,23 @@ function showVideoPlayer(slideId, segment) {
         playerVideo.style.width = '100%';
         playerVideo.style.height = '100%';
         playerVideo.style.borderRadius = '12px';
-        
+
         playerContainer.appendChild(playerVideo);
-        
+
         // Replace placeholder with video player
         placeholder.parentNode.replaceChild(playerContainer, placeholder);
-        
+
         console.log('Setting up video source and playback for:', segment.title);
-        
+
         // Simplified play approach for iPad
         const playVideo = () => {
             playerVideo.currentTime = segment.startTime;
             const playPromise = playerVideo.play();
-            
+
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     console.log('Video playing successfully');
-                    
+
                     // Stop at segment end
                     const stopPlayback = () => {
                         if (playerVideo.currentTime >= segment.endTime) {
@@ -536,7 +802,7 @@ function showVideoPlayer(slideId, segment) {
                         }
                     };
                     playerVideo.addEventListener('timeupdate', stopPlayback);
-                    
+
                 }).catch(() => {
                     console.log('Autoplay prevented, adding play button');
                     // Only add play button if truly needed
@@ -544,10 +810,10 @@ function showVideoPlayer(slideId, segment) {
                 });
             }
         };
-        
+
         // Try to play immediately since video is pre-buffered
         playVideo();
-        
+
     } catch (error) {
         console.error('Error showing video player:', error);
     }
@@ -558,7 +824,7 @@ function addSafariPlayButton(container, video, segment) {
     try {
         // Check if play button already exists
         if (container.querySelector('.safari-play-btn')) return;
-        
+
         const playButton = document.createElement('button');
         playButton.className = 'safari-play-btn';
         playButton.innerHTML = '▶️ Tap to Play';
@@ -577,13 +843,13 @@ function addSafariPlayButton(container, video, segment) {
             cursor: pointer;
             z-index: 10;
         `;
-        
+
         playButton.onclick = () => {
             video.currentTime = segment.startTime;
             video.play().then(() => {
                 playButton.remove();
                 console.log('Safari manual play successful');
-                
+
                 // Add stop listener
                 const stopPlayback = () => {
                     if (video.currentTime >= segment.endTime) {
@@ -592,19 +858,19 @@ function addSafariPlayButton(container, video, segment) {
                         console.log('Safari manual video segment completed');
                     }
                 };
-                
+
                 video.addEventListener('timeupdate', stopPlayback);
-                
+
             }).catch(error => {
                 console.error('Safari manual play failed:', error);
             });
         };
-        
+
         container.style.position = 'relative';
         container.appendChild(playButton);
-        
+
         console.log('Safari play button added');
-        
+
     } catch (error) {
         console.error('Error adding Safari play button:', error);
     }
@@ -615,13 +881,13 @@ function playVideoSegmentAuto(slideId, segment) {
     try {
         const playerVideo = document.getElementById(`player-${slideId}`);
         if (!playerVideo) return;
-        
+
         // Set start time and play automatically
         playerVideo.currentTime = segment.startTime;
-        
+
         // Play the video (handle Safari autoplay restrictions)
         const playPromise = playerVideo.play();
-        
+
         if (playPromise !== undefined) {
             playPromise.then(() => {
                 console.log('Auto-playing video segment:', segment.startTime, 'to', segment.endTime);
@@ -630,7 +896,7 @@ function playVideoSegmentAuto(slideId, segment) {
                 // Could show a simple play button here if needed
             });
         }
-        
+
         // Stop at end time
         const stopPlayback = () => {
             if (playerVideo.currentTime >= segment.endTime) {
@@ -639,9 +905,9 @@ function playVideoSegmentAuto(slideId, segment) {
                 console.log('Video segment completed');
             }
         };
-        
+
         playerVideo.addEventListener('timeupdate', stopPlayback);
-        
+
     } catch (error) {
         console.error('Error auto-playing video segment:', error);
     }
@@ -652,16 +918,16 @@ function playVideoSegment(slideId) {
     try {
         const playerVideo = document.getElementById(`player-${slideId}`);
         if (!playerVideo) return;
-        
+
         const slide = slides.find(s => s.id === slideId);
         if (!slide || !slide.videoSegment) return;
-        
+
         const segment = slide.videoSegment;
-        
+
         // Set start time and play
         playerVideo.currentTime = segment.startTime;
         playerVideo.play();
-        
+
         // Stop at end time
         const stopPlayback = () => {
             if (playerVideo.currentTime >= segment.endTime) {
@@ -670,55 +936,306 @@ function playVideoSegment(slideId) {
                 console.log('Video segment playback completed');
             }
         };
-        
+
         playerVideo.addEventListener('timeupdate', stopPlayback);
-        
+
         console.log('Playing video segment:', segment.startTime, 'to', segment.endTime);
-        
+
     } catch (error) {
         console.error('Error playing video segment:', error);
     }
 }
 
 // Capture video frame for image slides
-function captureVideoFrame(slideId, segment) {
+function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
+    const maxRetries = 5; // Increased for Safari
+    
+    try {
+        console.log(`Safari: Attempting to capture frame for ${segment.title} at ${segment.time}s (attempt ${retryCount + 1})`);
+        
+        const slideElement = document.getElementById(slideId);
+        if (!slideElement) {
+            console.error('Slide element not found:', slideId);
+            return;
+        }
+
+        const placeholder = slideElement.querySelector('.image-placeholder');
+        if (!placeholder) {
+            console.log('Image placeholder not found - frame may already exist');
+            return;
+        }
+
+        // Show loading state
+        placeholder.innerHTML = `
+            🖼️ Loading Frame...
+            <div class="image-details">Capturing at ${segment.time}s</div>
+        `;
+
+        // Ensure master video is ready and loaded
+        if (!masterVideoElement || masterVideoElement.readyState < 2) {
+            console.warn('Safari: Master video not ready, waiting...');
+            if (retryCount < maxRetries) {
+                setTimeout(() => {
+                    captureVideoFrameSafari(slideId, segment, retryCount + 1);
+                }, 1000); // Longer delay for Safari
+            } else {
+                console.error('Safari: Max retries reached, video not ready');
+                showImageErrorSafari(slideId, 'Video not loaded');
+            }
+            return;
+        }
+
+        // Safari-specific: Ensure video dimensions are available
+        if (masterVideoElement.videoWidth === 0 || masterVideoElement.videoHeight === 0) {
+            console.warn('Safari: Video dimensions not available, waiting...');
+            if (retryCount < maxRetries) {
+                setTimeout(() => {
+                    captureVideoFrameSafari(slideId, segment, retryCount + 1);
+                }, 800);
+            } else {
+                showImageErrorSafari(slideId, 'Video dimensions unavailable');
+            }
+            return;
+        }
+
+        // Set current time and wait for Safari to actually seek
+        masterVideoElement.currentTime = segment.time;
+        
+        // Safari-specific: Use multiple event listeners for better compatibility
+        let seekCompleted = false;
+        let timeoutId = null;
+        
+        const completeCapture = () => {
+            if (seekCompleted) return; // Prevent double execution
+            seekCompleted = true;
+            
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            
+            // Additional delay for Safari to ensure frame is ready
+            setTimeout(() => {
+                performSafariFrameCapture(slideId, segment, retryCount);
+            }, 300); // Longer delay for Safari
+        };
+
+        // Safari compatibility: Listen to multiple events
+        const onSeeked = () => {
+            console.log('Safari: Video seeked to:', masterVideoElement.currentTime);
+            masterVideoElement.removeEventListener('seeked', onSeeked);
+            completeCapture();
+        };
+
+        const onTimeUpdate = () => {
+            if (Math.abs(masterVideoElement.currentTime - segment.time) < 0.5) {
+                console.log('Safari: Time update reached target:', masterVideoElement.currentTime);
+                masterVideoElement.removeEventListener('timeupdate', onTimeUpdate);
+                completeCapture();
+            }
+        };
+
+        // Set up event listeners
+        masterVideoElement.addEventListener('seeked', onSeeked, { once: true });
+        masterVideoElement.addEventListener('timeupdate', onTimeUpdate);
+        
+        // Safari fallback: Force capture after timeout
+        timeoutId = setTimeout(() => {
+            if (!seekCompleted) {
+                console.warn('Safari: Seek timeout, forcing capture');
+                masterVideoElement.removeEventListener('seeked', onSeeked);
+                masterVideoElement.removeEventListener('timeupdate', onTimeUpdate);
+                completeCapture();
+            }
+        }, 3000); // Longer timeout for Safari
+
+    } catch (error) {
+        console.error('Safari: Error in captureVideoFrameSafari:', error);
+        if (retryCount < maxRetries) {
+            setTimeout(() => {
+                captureVideoFrameSafari(slideId, segment, retryCount + 1);
+            }, 1000);
+        } else {
+            showImageErrorSafari(slideId, 'Capture failed');
+        }
+    }
+}
+
+function performSafariFrameCapture(slideId, segment, retryCount) {
     try {
         const slideElement = document.getElementById(slideId);
-        if (!slideElement) return;
+        const placeholder = slideElement?.querySelector('.image-placeholder');
         
-        const placeholder = slideElement.querySelector('.image-placeholder');
-        if (!placeholder) return;
-        
-        // Create canvas to capture frame
+        if (!slideElement || !placeholder) {
+            console.error('Safari: Slide elements not found during capture');
+            return;
+        }
+
+        // Final check of video readiness
+        if (masterVideoElement.readyState < 2 || masterVideoElement.videoWidth === 0) {
+            console.warn('Safari: Video still not ready during capture, retrying...');
+            if (retryCount < 5) {
+                setTimeout(() => {
+                    captureVideoFrameSafari(slideId, segment, retryCount + 1);
+                }, 1000);
+            } else {
+                showImageErrorSafari(slideId, 'Video not ready for capture');
+            }
+            return;
+        }
+
+        // Create canvas with Safari-compatible settings
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Set canvas size to match video
-        canvas.width = masterVideoElement.videoWidth || 1920;
-        canvas.height = masterVideoElement.videoHeight || 1080;
-        
-        // Draw current video frame to canvas
-        ctx.drawImage(masterVideoElement, 0, 0, canvas.width, canvas.height);
-        
+        const ctx = canvas.getContext('2d', { 
+            alpha: false, // Better performance on Safari
+            willReadFrequently: false 
+        });
+
+        // Set canvas size
+        const videoWidth = masterVideoElement.videoWidth;
+        const videoHeight = masterVideoElement.videoHeight;
+        canvas.width = videoWidth;
+        canvas.height = videoHeight;
+
+        console.log(`Safari: Capturing frame at ${videoWidth}x${videoHeight} for time ${segment.time}s`);
+
+        try {
+            // Draw current video frame to canvas
+            ctx.drawImage(masterVideoElement, 0, 0, videoWidth, videoHeight);
+            
+            // Safari-specific: Check if canvas has valid content
+            const imageData = ctx.getImageData(0, 0, Math.min(100, videoWidth), Math.min(100, videoHeight));
+            const pixels = imageData.data;
+            let hasContent = false;
+            
+            // Check first 100x100 pixels for any non-black content
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i] > 20 || pixels[i + 1] > 20 || pixels[i + 2] > 20) {
+                    hasContent = true;
+                    break;
+                }
+            }
+            
+            if (!hasContent) {
+                console.warn('Safari: Captured frame appears empty, retrying...');
+                if (retryCount < 3) {
+                    setTimeout(() => {
+                        captureVideoFrameSafari(slideId, segment, retryCount + 1);
+                    }, 800);
+                    return;
+                }
+                // Continue anyway if max retries reached
+                console.warn('Safari: Using potentially empty frame after max retries');
+            }
+
+        } catch (drawError) {
+            console.error('Safari: Error drawing to canvas:', drawError);
+            if (retryCount < 3) {
+                setTimeout(() => {
+                    captureVideoFrameSafari(slideId, segment, retryCount + 1);
+                }, 1000);
+                return;
+            }
+            showImageErrorSafari(slideId, 'Canvas drawing failed');
+            return;
+        }
+
         // Create image frame container
         const frameContainer = document.createElement('div');
         frameContainer.className = 'image-frame';
-        frameContainer.innerHTML = `
-            <canvas width="${canvas.width}" height="${canvas.height}" style="max-width: 100%; max-height: 100%; border-radius: 12px;"></canvas>
+        
+        // Safari-compatible canvas styling
+        const displayCanvas = document.createElement('canvas');
+        displayCanvas.width = videoWidth;
+        displayCanvas.height = videoHeight;
+        displayCanvas.style.cssText = `
+            max-width: 100%; 
+            max-height: 100%; 
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
         `;
         
-        // Copy canvas content to display canvas
-        const displayCanvas = frameContainer.querySelector('canvas');
-        const displayCtx = displayCanvas.getContext('2d');
+        // Copy canvas content
+        const displayCtx = displayCanvas.getContext('2d', { alpha: false });
         displayCtx.drawImage(canvas, 0, 0);
         
+        frameContainer.appendChild(displayCanvas);
+
         // Replace placeholder with image frame
         placeholder.parentNode.replaceChild(frameContainer, placeholder);
+
+        console.log(`✅ Safari: Video frame captured successfully for ${segment.title} at ${segment.time}s`);
+
+    } catch (error) {
+        console.error('Safari: Error in performSafariFrameCapture:', error);
+        if (retryCount < 3) {
+            setTimeout(() => {
+                captureVideoFrameSafari(slideId, segment, retryCount + 1);
+            }, 1000);
+        } else {
+            showImageErrorSafari(slideId, 'Frame processing failed');
+        }
+    }
+}
+
+function showImageErrorSafari(slideId, errorMessage) {
+    try {
+        const slideElement = document.getElementById(slideId);
+        const placeholder = slideElement?.querySelector('.image-placeholder');
         
-        console.log('Video frame captured for:', segment.title, 'at', segment.time, 'seconds');
+        if (!slideElement || !placeholder) return;
+        
+        // Safari-friendly error display
+        placeholder.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Image Error</div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 20px;">${errorMessage}</div>
+                <button onclick="retrySafariImageCapture('${slideId}')" 
+                        style="padding: 12px 24px; border: none; border-radius: 8px; 
+                               background: #667eea; color: white; cursor: pointer; font-size: 16px;
+                               -webkit-appearance: none; -webkit-tap-highlight-color: transparent;">
+                    🔄 Try Again
+                </button>
+            </div>
+        `;
+        
+        console.error(`Safari: Image capture failed for slide ${slideId}: ${errorMessage}`);
         
     } catch (error) {
-        console.error('Error capturing video frame:', error);
+        console.error('Safari: Error showing image error:', error);
+    }
+}
+
+// Safari-compatible retry function
+function retrySafariImageCapture(slideId) {
+    try {
+        const slide = slides.find(s => s.id === slideId);
+        if (!slide || !slide.videoSegment) return;
+        
+        console.log('Safari: Retrying image capture for:', slide.videoSegment.title);
+        
+        // Reset the placeholder with loading state
+        const slideElement = document.getElementById(slideId);
+        const container = slideElement?.querySelector('.image-frame') || slideElement?.querySelector('.image-placeholder');
+        
+        if (container) {
+            const newPlaceholder = document.createElement('div');
+            newPlaceholder.className = 'image-placeholder';
+            newPlaceholder.innerHTML = `
+                🖼️ Retrying...
+                <div class="image-details">Loading frame...</div>
+            `;
+            container.parentNode.replaceChild(newPlaceholder, container);
+        }
+        
+        // Retry capture with delay
+        setTimeout(() => {
+            captureVideoFrameSafari(slideId, slide.videoSegment, 0);
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Safari: Error retrying image capture:', error);
     }
 }
 
@@ -728,15 +1245,15 @@ function clearAllSlides() {
         // Clear slides array
         slides.length = 0;
         currentSlideIndex = 0;
-        
+
         // Clear slide container
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
             slideContainer.innerHTML = '';
         }
-        
+
         console.log('Cleared all slides');
-        
+
     } catch (error) {
         console.error('Error clearing slides:', error);
     }
@@ -747,34 +1264,35 @@ function extendShowSlide() {
     // Store original showSlide function
     if (typeof window.originalShowSlide === 'undefined') {
         window.originalShowSlide = showSlide;
-        
+
         // Override showSlide to handle video slides
-        showSlide = function(index) {
+        showSlide = function (index) {
             try {
-                // Try to handle as video slide first
-                const handled = showVideoSlide(index);
-                
-                // If not a video slide, use original function
-                if (!handled) {
-                    window.originalShowSlide(index);
-                } else {
-                    // Still need to do basic slide switching for video slides
+
+                const slide = slides[index];
+
+                // Handle cover slides
+                if (slide && slide.isCoverSlide) {
+                    // Just show the slide, no special handling needed
                     currentSlideIndex = index;
-                    
+
                     // Hide all slides
                     document.querySelectorAll('.slide').forEach(slide => {
                         slide.classList.remove('active');
                     });
-                    
+
                     // Show current slide
-                    const currentSlide = slides[index];
-                    if (currentSlide) {
-                        const slideElement = document.getElementById(currentSlide.id);
-                        if (slideElement) {
-                            slideElement.classList.add('active');
-                        }
+                    const slideElement = document.getElementById(slide.id);
+                    if (slideElement) {
+                        slideElement.classList.add('active');
                     }
-                    
+
+                    // Make customize button invisible for cover slides
+                    const customizeBtn = document.getElementById('customizeBtn');
+                    if (customizeBtn) {
+                        customizeBtn.style.visibility = 'hidden';
+                    }
+
                     // Update UI elements
                     const currentSlideSpan = document.getElementById('currentSlide');
                     const totalSlidesSpan = document.getElementById('totalSlides');
@@ -784,11 +1302,60 @@ function extendShowSlide() {
                     if (totalSlidesSpan) {
                         totalSlidesSpan.textContent = slides.length;
                     }
-                    
+
+                    // Hide tabs for cover slides
+                    const chartTab = document.getElementById('chartTab');
+                    const videoTab = document.getElementById('videoTab');
+                    if (chartTab) chartTab.style.display = 'none';
+                    if (videoTab) videoTab.style.display = 'none';
+
+                    return;
+                }
+
+                // Make customize button visible for non-cover slides
+                const customizeBtn = document.getElementById('customizeBtn');
+                if (customizeBtn) {
+                    customizeBtn.style.visibility = 'visible';
+                }
+
+                // Try to handle as video slide first
+                const handled = showVideoSlide(index);
+
+                // If not a video slide, use original function
+                if (!handled) {
+                    window.originalShowSlide(index);
+                } else {
+                    // Still need to do basic slide switching for video slides
+                    currentSlideIndex = index;
+
+                    // Hide all slides
+                    document.querySelectorAll('.slide').forEach(slide => {
+                        slide.classList.remove('active');
+                    });
+
+                    // Show current slide
+                    const currentSlide = slides[index];
+                    if (currentSlide) {
+                        const slideElement = document.getElementById(currentSlide.id);
+                        if (slideElement) {
+                            slideElement.classList.add('active');
+                        }
+                    }
+
+                    // Update UI elements
+                    const currentSlideSpan = document.getElementById('currentSlide');
+                    const totalSlidesSpan = document.getElementById('totalSlides');
+                    if (currentSlideSpan) {
+                        currentSlideSpan.textContent = index + 1;
+                    }
+                    if (totalSlidesSpan) {
+                        totalSlidesSpan.textContent = slides.length;
+                    }
+
                     // Update tabs for current slide
                     updateTabsForCurrentSlide();
                 }
-                
+
             } catch (error) {
                 console.error('Error in extended showSlide:', error);
                 // Fallback to original
@@ -799,7 +1366,7 @@ function extendShowSlide() {
 }
 
 // Initialize video slides when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Wait a bit for main script to initialize
     setTimeout(() => {
         initVideoSlides();
@@ -812,7 +1379,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize tab system
 function initTabSystem() {
     console.log('Initializing tab system...');
-    
+
     // Set default tab based on current slide
     updateTabsForCurrentSlide();
 }
@@ -821,29 +1388,29 @@ function initTabSystem() {
 function switchTab(tabName) {
     try {
         console.log('Switching to tab:', tabName);
-        
+
         // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
-        
+
         // Remove active class from all tabs
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        
+
         // Show selected tab content
         const tabContent = document.getElementById(`${tabName}TabContent`);
         const tabBtn = document.getElementById(`${tabName}Tab`);
-        
+
         if (tabContent) {
             tabContent.classList.add('active');
         }
-        
+
         if (tabBtn) {
             tabBtn.classList.add('active');
         }
-        
+
         // Refresh content based on tab
         if (tabName === 'chart') {
             updateChart();
@@ -854,7 +1421,7 @@ function switchTab(tabName) {
                 setupTimelinePreview();
             }
         }
-        
+
     } catch (error) {
         console.error('Error switching tabs:', error);
     }
@@ -865,22 +1432,22 @@ function updateTabsForCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartTab = document.getElementById('chartTab');
         const videoTab = document.getElementById('videoTab');
         const commonTab = document.getElementById('commonTab');
         const editCurrentSection = document.getElementById('editCurrentSection');
-        
+
         if (!chartTab || !videoTab || !commonTab) return;
-        
+
         console.log('Updating tabs for slide type:', currentSlide.chartType);
-        
+
         if (currentSlide.isVideoSlide) {
             // Video or Image slide
             chartTab.style.display = 'none';
             videoTab.style.display = 'block';
             commonTab.style.display = 'block';
-            
+
             // Show edit section only for video slides (not image slides)
             if (editCurrentSection && currentSlide.videoSegment && currentSlide.videoSegment.type === 'video') {
                 editCurrentSection.style.display = 'block';
@@ -888,25 +1455,25 @@ function updateTabsForCurrentSlide() {
             } else if (editCurrentSection) {
                 editCurrentSection.style.display = 'none';
             }
-            
+
             // Auto-switch to video tab
             switchTab('video');
-            
+
         } else {
             // Chart slide
             chartTab.style.display = 'block';
             videoTab.style.display = 'none';
             commonTab.style.display = 'block';
-            
+
             // Hide edit section
             if (editCurrentSection) {
                 editCurrentSection.style.display = 'none';
             }
-            
+
             // Auto-switch to chart tab
             switchTab('chart');
         }
-        
+
     } catch (error) {
         console.error('Error updating tabs:', error);
     }
@@ -917,14 +1484,14 @@ function toggleAccordion(accordionId) {
     try {
         const accordion = document.getElementById(accordionId);
         const arrow = document.getElementById(accordionId + 'Arrow');
-        
+
         if (!accordion || !arrow) {
             console.error('Accordion elements not found:', accordionId);
             return;
         }
-        
+
         const isExpanded = accordion.classList.contains('expanded');
-        
+
         if (isExpanded) {
             // Collapse
             accordion.classList.remove('expanded');
@@ -938,9 +1505,9 @@ function toggleAccordion(accordionId) {
             arrow.textContent = '▲';
             console.log('Accordion expanded:', accordionId);
         }
-        
+
         console.log('Accordion toggled:', accordionId, isExpanded ? 'collapsed' : 'expanded');
-        
+
     } catch (error) {
         console.error('Error toggling accordion:', error);
     }
@@ -951,24 +1518,24 @@ function updateTabsForCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartTab = document.getElementById('chartTab');
         const videoTab = document.getElementById('videoTab');
         const commonTab = document.getElementById('commonTab');
         const editCurrentVideoSection = document.getElementById('editCurrentVideoSection');
         const editCurrentImageSection = document.getElementById('editCurrentImageSection');
         const noSlideSelected = document.getElementById('noSlideSelected');
-        
+
         if (!chartTab || !videoTab || !commonTab) return;
-        
+
         console.log('Updating tabs for slide type:', currentSlide.chartType);
-        
+
         if (currentSlide.isVideoSlide) {
             // Video or Image slide
             chartTab.style.display = 'none';
             videoTab.style.display = 'block';
             commonTab.style.display = 'block';
-            
+
             // Show appropriate edit section based on slide type
             if (currentSlide.videoSegment && currentSlide.videoSegment.type === 'video') {
                 // Video slide - show video edit section
@@ -1006,16 +1573,16 @@ function updateTabsForCurrentSlide() {
                     noSlideSelected.style.display = 'block';
                 }
             }
-            
+
             // Auto-switch to video tab
             switchTab('video');
-            
+
         } else {
             // Chart slide
             chartTab.style.display = 'block';
             videoTab.style.display = 'none';
             commonTab.style.display = 'block';
-            
+
             // Hide edit sections, show message
             if (editCurrentVideoSection) {
                 editCurrentVideoSection.style.display = 'none';
@@ -1026,11 +1593,11 @@ function updateTabsForCurrentSlide() {
             if (noSlideSelected) {
                 noSlideSelected.style.display = 'block';
             }
-            
+
             // Auto-switch to chart tab
             switchTab('chart');
         }
-        
+
     } catch (error) {
         console.error('Error updating tabs:', error);
     }
@@ -1040,41 +1607,41 @@ function updateTabsForCurrentSlide() {
 function setupEditVideoSection(slide) {
     try {
         if (!slide.videoSegment || slide.videoSegment.type !== 'video') return;
-        
+
         const segment = slide.videoSegment;
-        
+
         // Setup edit timeline preview
         const editTimelinePreview = document.getElementById('editTimelinePreview');
         if (editTimelinePreview && currentVideoUrl) {
             editTimelinePreview.src = currentVideoUrl;
-            
+
             // Setup edit timeline scrubber
             const editTimelineScrubber = document.getElementById('editTimelineScrubber');
             if (editTimelineScrubber && masterVideoElement && masterVideoElement.duration) {
                 editTimelineScrubber.max = Math.floor(masterVideoElement.duration);
                 editTimelineScrubber.value = segment.startTime;
-                
+
                 // Add event listener for edit scrubber
                 editTimelineScrubber.removeEventListener('input', handleEditTimelineChange);
                 editTimelineScrubber.addEventListener('input', handleEditTimelineChange);
             }
         }
-        
+
         // Pre-fill with current slide's times
         editStartTime = segment.startTime;
         editEndTime = segment.endTime;
-        
+
         updateTimeDisplay('editStartTimeDisplay', editStartTime);
         updateTimeDisplay('editEndTimeDisplay', editEndTime);
         updateEditSegmentDuration();
-        
+
         // Update total time display
         if (masterVideoElement && masterVideoElement.duration) {
             updateTimeDisplay('editTotalTimeDisplay', masterVideoElement.duration);
         }
-        
+
         console.log('Edit video section setup complete for:', segment.title);
-        
+
     } catch (error) {
         console.error('Error setting up edit video section:', error);
     }
@@ -1084,37 +1651,37 @@ function setupEditVideoSection(slide) {
 function setupEditImageSection(slide) {
     try {
         if (!slide.videoSegment || slide.videoSegment.type !== 'image') return;
-        
+
         const segment = slide.videoSegment;
-        
+
         // Setup edit image timeline preview
         const editImageTimelinePreview = document.getElementById('editImageTimelinePreview');
         if (editImageTimelinePreview && currentVideoUrl) {
             editImageTimelinePreview.src = currentVideoUrl;
-            
+
             // Setup edit image timeline scrubber
             const editImageTimelineScrubber = document.getElementById('editImageTimelineScrubber');
             if (editImageTimelineScrubber && masterVideoElement && masterVideoElement.duration) {
                 editImageTimelineScrubber.max = Math.floor(masterVideoElement.duration);
                 editImageTimelineScrubber.value = segment.time;
-                
+
                 // Add event listener for edit image scrubber
                 editImageTimelineScrubber.removeEventListener('input', handleEditImageTimelineChange);
                 editImageTimelineScrubber.addEventListener('input', handleEditImageTimelineChange);
             }
         }
-        
+
         // Pre-fill with current slide's time
         editImageFrameTime = segment.time;
         updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
-        
+
         // Update total time display
         if (masterVideoElement && masterVideoElement.duration) {
             updateTimeDisplay('editImageTotalTimeDisplay', masterVideoElement.duration);
         }
-        
+
         console.log('Edit image section setup complete for:', segment.title);
-        
+
     } catch (error) {
         console.error('Error setting up edit image section:', error);
     }
@@ -1128,13 +1695,13 @@ function handleEditImageTimelineChange(event) {
     try {
         const timelinePreview = document.getElementById('editImageTimelinePreview');
         if (!timelinePreview) return;
-        
+
         const time = parseFloat(event.target.value);
         timelinePreview.currentTime = time;
-        
+
         // Update current time display
         updateTimeDisplay('editImageCurrentTimeDisplay', time);
-        
+
     } catch (error) {
         console.error('Error handling edit image timeline change:', error);
     }
@@ -1144,10 +1711,10 @@ function handleEditImageTimelineChange(event) {
 function setEditImageFrameTime() {
     const editImageTimelineScrubber = document.getElementById('editImageTimelineScrubber');
     if (!editImageTimelineScrubber) return;
-    
+
     editImageFrameTime = parseFloat(editImageTimelineScrubber.value);
     updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
-    
+
     console.log('Edit image frame time set to:', editImageFrameTime);
 }
 
@@ -1159,23 +1726,23 @@ function updateImageSlide() {
             alert('Please select an image slide to update.');
             return;
         }
-        
+
         if (currentSlide.videoSegment.type !== 'image') {
             alert('Please select an image slide to update.');
             return;
         }
-        
+
         // Update the segment
         const segment = currentSlide.videoSegment;
         segment.time = editImageFrameTime;
-        
+
         console.log('Updated image slide:', segment.title);
-        
+
         // Refresh the slide
         showSlide(currentSlideIndex);
-        
+
         alert('Image slide updated successfully!');
-        
+
     } catch (error) {
         console.error('Error updating image slide:', error);
         alert('Error updating image slide. Please try again.');
@@ -1191,13 +1758,13 @@ function handleEditTimelineChange(event) {
     try {
         const timelinePreview = document.getElementById('editTimelinePreview');
         if (!timelinePreview) return;
-        
+
         const time = parseFloat(event.target.value);
         timelinePreview.currentTime = time;
-        
+
         // Update current time display
         updateTimeDisplay('editCurrentTimeDisplay', time);
-        
+
     } catch (error) {
         console.error('Error handling edit timeline change:', error);
     }
@@ -1207,11 +1774,11 @@ function handleEditTimelineChange(event) {
 function setEditStartTime() {
     const editTimelineScrubber = document.getElementById('editTimelineScrubber');
     if (!editTimelineScrubber) return;
-    
+
     editStartTime = parseFloat(editTimelineScrubber.value);
     updateTimeDisplay('editStartTimeDisplay', editStartTime);
     updateEditSegmentDuration();
-    
+
     console.log('Edit start time set to:', editStartTime);
 }
 
@@ -1219,17 +1786,17 @@ function setEditStartTime() {
 function setEditEndTime() {
     const editTimelineScrubber = document.getElementById('editTimelineScrubber');
     if (!editTimelineScrubber) return;
-    
+
     editEndTime = parseFloat(editTimelineScrubber.value);
-    
+
     // Ensure end time is after start time
     if (editEndTime <= editStartTime) {
         editEndTime = editStartTime + 5; // Default 5 second segment
     }
-    
+
     updateTimeDisplay('editEndTimeDisplay', editEndTime);
     updateEditSegmentDuration();
-    
+
     console.log('Edit end time set to:', editEndTime);
 }
 
@@ -1237,7 +1804,7 @@ function setEditEndTime() {
 function updateEditSegmentDuration() {
     const durationElement = document.getElementById('editSegmentDuration');
     if (!durationElement) return;
-    
+
     const duration = Math.max(0, editEndTime - editStartTime);
     durationElement.textContent = `${duration.toFixed(1)}s`;
 }
@@ -1250,30 +1817,30 @@ function updateVideoSlide() {
             alert('Please select a video slide to update.');
             return;
         }
-        
+
         if (editEndTime <= editStartTime) {
             alert('Please set both start and end times, with end time after start time.');
             return;
         }
-        
+
         if (editEndTime - editStartTime < 1) {
             alert('Video segment must be at least 1 second long.');
             return;
         }
-        
+
         // Update the segment
         const segment = currentSlide.videoSegment;
         segment.startTime = editStartTime;
         segment.endTime = editEndTime;
         segment.duration = editEndTime - editStartTime;
-        
+
         console.log('Updated video slide:', segment.title);
-        
+
         // Refresh the slide
         showSlide(currentSlideIndex);
-        
+
         alert('Video slide updated successfully!');
-        
+
     } catch (error) {
         console.error('Error updating video slide:', error);
         alert('Error updating video slide. Please try again.');
@@ -1283,38 +1850,38 @@ function updateVideoSlide() {
 // Initialize video controls (updated)
 function initVideoControls() {
     console.log('Initializing video timeline controls...');
-    
+
     // Setup main timeline scrubber (Create Video)
     const timelineScrubber = document.getElementById('timelineScrubber');
     const timelinePreview = document.getElementById('timelinePreview');
-    
+
     if (timelineScrubber && timelinePreview) {
-        timelineScrubber.addEventListener('input', function() {
+        timelineScrubber.addEventListener('input', function () {
             updateTimelinePreview(this.value);
         });
-        
+
         if (currentVideoUrl) {
             timelinePreview.src = currentVideoUrl;
             setupTimelinePreview();
         }
     }
-    
+
     // Setup image timeline scrubber (Create Image) - FIX THIS
     const imageTimelineScrubber = document.getElementById('imageTimelineScrubber');
     const imageTimelinePreview = document.getElementById('imageTimelinePreview');
-    
+
     if (imageTimelineScrubber && imageTimelinePreview) {
         console.log('Setting up image timeline scrubber...');
-        
+
         // Remove any existing listeners
         imageTimelineScrubber.removeEventListener('input', updateImageTimelinePreview);
-        
+
         // Add new listener
-        imageTimelineScrubber.addEventListener('input', function() {
+        imageTimelineScrubber.addEventListener('input', function () {
             console.log('Image slider moved to:', this.value);
             updateImageTimelinePreview(this.value);
         });
-        
+
         if (currentVideoUrl) {
             imageTimelinePreview.src = currentVideoUrl;
             setupImageTimelinePreview();
@@ -1331,25 +1898,25 @@ function initVideoControls() {
 function setupImageTimelinePreview() {
     const imageTimelinePreview = document.getElementById('imageTimelinePreview');
     const imageTimelineScrubber = document.getElementById('imageTimelineScrubber');
-    
+
     if (!imageTimelinePreview) {
         console.error('Image timeline preview element not found');
         return;
     }
-    
+
     console.log('Setting up image timeline preview...');
-    
-    imageTimelinePreview.addEventListener('loadedmetadata', function() {
+
+    imageTimelinePreview.addEventListener('loadedmetadata', function () {
         const duration = this.duration;
         console.log('Image timeline preview loaded, duration:', duration);
-        
+
         if (imageTimelineScrubber) {
             imageTimelineScrubber.max = Math.floor(duration);
             console.log('Image timeline scrubber max set to:', Math.floor(duration));
         }
-        
+
         updateTimeDisplay('imageTotalTimeDisplay', duration);
-        
+
         // Test the slider immediately
         if (imageTimelineScrubber) {
             console.log('Testing image timeline scrubber...');
@@ -1359,15 +1926,15 @@ function setupImageTimelinePreview() {
             updateImageTimelinePreview(testTime);
         }
     });
-    
-    imageTimelinePreview.addEventListener('timeupdate', function() {
+
+    imageTimelinePreview.addEventListener('timeupdate', function () {
         updateTimeDisplay('imageCurrentTimeDisplay', this.currentTime);
     });
-    
-    imageTimelinePreview.addEventListener('error', function(e) {
+
+    imageTimelinePreview.addEventListener('error', function (e) {
         console.error('Image timeline preview error:', e);
     });
-    
+
     // Force load
     if (currentVideoUrl && imageTimelinePreview.src !== currentVideoUrl) {
         console.log('Setting image timeline preview src:', currentVideoUrl);
@@ -1380,29 +1947,29 @@ function setupImageTimelinePreview() {
 function updateImageTimelinePreview(sliderValue) {
     try {
         console.log('updateImageTimelinePreview called with:', sliderValue);
-        
+
         const imageTimelinePreview = document.getElementById('imageTimelinePreview');
         if (!imageTimelinePreview) {
             console.error('Image timeline preview not found');
             return;
         }
-        
+
         if (!imageTimelinePreview.duration) {
             console.warn('Image timeline preview duration not ready:', imageTimelinePreview.readyState);
             return;
         }
-        
+
         const time = parseFloat(sliderValue);
         console.log('Setting image timeline to time:', time);
-        
+
         imageTimelinePreview.currentTime = time;
-        
+
         // Update displays
         updateTimeDisplay('imageCurrentTimeDisplay', time);
         updateTimeDisplay('imageFrameTimeDisplay', time);
-        
+
         console.log('Image timeline updated successfully');
-        
+
     } catch (error) {
         console.error('Error updating image timeline preview:', error);
     }
@@ -1412,10 +1979,10 @@ function updateImageTimelinePreview(sliderValue) {
 function setImageFrameTime() {
     const imageTimelineScrubber = document.getElementById('imageTimelineScrubber');
     if (!imageTimelineScrubber) return;
-    
+
     const frameTime = parseFloat(imageTimelineScrubber.value);
     updateTimeDisplay('imageFrameTimeDisplay', frameTime);
-    
+
     console.log('Image frame time set to:', frameTime);
 }
 
@@ -1424,9 +1991,9 @@ function createImageSlide() {
     try {
         const imageTimelineScrubber = document.getElementById('imageTimelineScrubber');
         if (!imageTimelineScrubber) return;
-        
+
         const currentTime = parseFloat(imageTimelineScrubber.value);
-        
+
         // Create image segment object
         const customSegment = {
             type: 'image',
@@ -1435,23 +2002,23 @@ function createImageSlide() {
             originalSegment: `custom-img-${currentTime}s`,
             campaignName: 'Custom'
         };
-        
+
         console.log('Creating custom image slide:', customSegment);
-        
+
         // Create slide
         const slideIndex = slides.length;
         createSlideFromSegment(customSegment, slideIndex);
-        
+
         // Update UI
         updateSlideList();
         updateNavigation();
-        
+
         // Switch to new slide
         currentSlideIndex = slides.length - 1;
         showSlide(currentSlideIndex);
-        
+
         alert('Image slide created successfully!');
-        
+
     } catch (error) {
         console.error('Error creating image slide:', error);
         alert('Error creating image slide. Please try again.');
@@ -1464,25 +2031,25 @@ function updateCurrentSlideInfo(slide) {
         const slideTypeDisplay = document.getElementById('slideTypeDisplay');
         const currentTimingDisplay = document.getElementById('currentTimingDisplay');
         const editActions = document.getElementById('editActions');
-        
+
         if (!slideTypeDisplay) return;
-        
+
         if (slide.isVideoSlide && slide.videoSegment) {
             const segment = slide.videoSegment;
-            
+
             // Show slide type and title
             slideTypeDisplay.textContent = `${segment.title} (${segment.type === 'video' ? 'Video' : 'Image'})`;
-            
+
             if (segment.type === 'video') {
                 // Show timing for video slides
                 updateTimeDisplay('currentStartTime', segment.startTime);
                 updateTimeDisplay('currentEndTime', segment.endTime);
-                
+
                 const currentDuration = document.getElementById('currentDuration');
                 if (currentDuration) {
                     currentDuration.textContent = `${segment.duration.toFixed(1)}s`;
                 }
-                
+
                 if (currentTimingDisplay) {
                     currentTimingDisplay.style.display = 'block';
                 }
@@ -1493,16 +2060,16 @@ function updateCurrentSlideInfo(slide) {
                 }
                 slideTypeDisplay.textContent += ` (Frame at ${segment.time}s)`;
             }
-            
+
             // Show edit actions
             if (editActions) {
                 editActions.style.display = 'flex';
             }
-            
+
         } else {
             // Not a video slide
             slideTypeDisplay.textContent = 'No video slide selected';
-            
+
             if (currentTimingDisplay) {
                 currentTimingDisplay.style.display = 'none';
             }
@@ -1510,7 +2077,7 @@ function updateCurrentSlideInfo(slide) {
                 editActions.style.display = 'none';
             }
         }
-        
+
     } catch (error) {
         console.error('Error updating current slide info:', error);
     }
@@ -1524,65 +2091,65 @@ function editCurrentSlide() {
             alert('Please select a video slide to edit.');
             return;
         }
-        
+
         const segment = currentSlide.videoSegment;
-        
+
         if (segment.type === 'video') {
             // For video slides, allow editing start/end times
             const newStartTime = prompt(`Edit start time (current: ${segment.startTime}s):`, segment.startTime);
             const newEndTime = prompt(`Edit end time (current: ${segment.endTime}s):`, segment.endTime);
-            
+
             if (newStartTime !== null && newEndTime !== null) {
                 const startTime = parseFloat(newStartTime);
                 const endTime = parseFloat(newEndTime);
-                
+
                 if (isNaN(startTime) || isNaN(endTime) || startTime >= endTime) {
                     alert('Invalid times. End time must be greater than start time.');
                     return;
                 }
-                
+
                 // Update segment
                 segment.startTime = startTime;
                 segment.endTime = endTime;
                 segment.duration = endTime - startTime;
-                
+
                 // Update display
                 updateCurrentSlideInfo(currentSlide);
-                
+
                 // Refresh slide if it's currently active
                 if (currentSlideIndex < slides.length) {
                     showSlide(currentSlideIndex);
                 }
-                
+
                 alert('Slide timing updated successfully!');
             }
         } else {
             // For image slides, allow editing the frame time
             const newTime = prompt(`Edit frame time (current: ${segment.time}s):`, segment.time);
-            
+
             if (newTime !== null) {
                 const frameTime = parseFloat(newTime);
-                
+
                 if (isNaN(frameTime) || frameTime < 0) {
                     alert('Invalid time. Please enter a valid number.');
                     return;
                 }
-                
+
                 // Update segment
                 segment.time = frameTime;
-                
+
                 // Update display
                 updateCurrentSlideInfo(currentSlide);
-                
+
                 // Refresh slide if it's currently active
                 if (currentSlideIndex < slides.length) {
                     showSlide(currentSlideIndex);
                 }
-                
+
                 alert('Image frame time updated successfully!');
             }
         }
-        
+
     } catch (error) {
         console.error('Error editing current slide:', error);
         alert('Error editing slide. Please try again.');
@@ -1597,14 +2164,14 @@ function deleteCurrentSlide() {
             alert('Please select a video slide to delete.');
             return;
         }
-        
+
         const confirmDelete = confirm(`Are you sure you want to delete "${currentSlide.title}"?`);
-        
+
         if (confirmDelete) {
             // Use existing delete function
             deleteSlide();
         }
-        
+
     } catch (error) {
         console.error('Error deleting current slide:', error);
         alert('Error deleting slide. Please try again.');
@@ -1614,17 +2181,17 @@ function deleteCurrentSlide() {
 // Initialize video timeline controls
 function initVideoControls() {
     console.log('Initializing video timeline controls...');
-    
+
     // Setup timeline scrubber
     const timelineScrubber = document.getElementById('timelineScrubber');
     const timelinePreview = document.getElementById('timelinePreview');
-    
+
     if (timelineScrubber && timelinePreview) {
         // Timeline scrubber change event
-        timelineScrubber.addEventListener('input', function() {
+        timelineScrubber.addEventListener('input', function () {
             updateTimelinePreview(this.value);
         });
-        
+
         // Preview video setup
         if (currentVideoUrl) {
             timelinePreview.src = currentVideoUrl;
@@ -1637,32 +2204,32 @@ function initVideoControls() {
 function setupTimelinePreview() {
     const timelinePreview = document.getElementById('timelinePreview');
     const timelineScrubber = document.getElementById('timelineScrubber');
-    
+
     if (!timelinePreview) return;
-    
-    timelinePreview.addEventListener('loadedmetadata', function() {
+
+    timelinePreview.addEventListener('loadedmetadata', function () {
         const duration = this.duration;
         console.log('Timeline preview loaded, duration:', duration);
-        
+
         // Update timeline scrubber max value
         if (timelineScrubber) {
             timelineScrubber.max = Math.floor(duration);
         }
-        
+
         // Update total time display
         updateTimeDisplay('totalTimeDisplay', duration);
-        
+
         // Show video controls if we have a video loaded
         const videoControls = document.getElementById('videoSlideControls');
         if (videoControls && currentVideoUrl) {
             videoControls.style.display = 'block';
         }
-        
+
         // Create timeline markers
         createTimelineMarkers(duration);
     });
-    
-    timelinePreview.addEventListener('timeupdate', function() {
+
+    timelinePreview.addEventListener('timeupdate', function () {
         updateTimeDisplay('currentTimeDisplay', this.currentTime);
     });
 }
@@ -1671,10 +2238,10 @@ function setupTimelinePreview() {
 function updateTimelinePreview(sliderValue) {
     const timelinePreview = document.getElementById('timelinePreview');
     if (!timelinePreview || !timelinePreview.duration) return;
-    
+
     const time = parseFloat(sliderValue);
     timelinePreview.currentTime = time;
-    
+
     // Update current time display
     updateTimeDisplay('currentTimeDisplay', time);
 }
@@ -1683,7 +2250,7 @@ function updateTimelinePreview(sliderValue) {
 function updateTimeDisplay(elementId, timeInSeconds) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     element.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
@@ -1693,15 +2260,15 @@ function updateTimeDisplay(elementId, timeInSeconds) {
 function createTimelineMarkers(videoDuration) {
     const markersContainer = document.getElementById('timelineMarkers');
     if (!markersContainer) return;
-    
+
     markersContainer.innerHTML = '';
-    
+
     // Add markers for existing video segments
     videoSegments.forEach((segment, index) => {
         if (segment.type === 'video') {
             const startPercent = (segment.startTime / videoDuration) * 100;
             const endPercent = (segment.endTime / videoDuration) * 100;
-            
+
             const marker = document.createElement('div');
             marker.className = 'timeline-marker video-marker';
             marker.style.left = `${startPercent}%`;
@@ -1710,7 +2277,7 @@ function createTimelineMarkers(videoDuration) {
             markersContainer.appendChild(marker);
         } else if (segment.type === 'image') {
             const timePercent = (segment.time / videoDuration) * 100;
-            
+
             const marker = document.createElement('div');
             marker.className = 'timeline-marker image-marker';
             marker.style.left = `${timePercent}%`;
@@ -1728,11 +2295,11 @@ let customEndTime = 0;
 function setStartTime() {
     const timelineScrubber = document.getElementById('timelineScrubber');
     if (!timelineScrubber) return;
-    
+
     customStartTime = parseFloat(timelineScrubber.value);
     updateTimeDisplay('startTimeDisplay', customStartTime);
     updateSegmentDuration();
-    
+
     console.log('Start time set to:', customStartTime);
 }
 
@@ -1740,17 +2307,17 @@ function setStartTime() {
 function setEndTime() {
     const timelineScrubber = document.getElementById('timelineScrubber');
     if (!timelineScrubber) return;
-    
+
     customEndTime = parseFloat(timelineScrubber.value);
-    
+
     // Ensure end time is after start time
     if (customEndTime <= customStartTime) {
         customEndTime = customStartTime + 5; // Default 5 second segment
     }
-    
+
     updateTimeDisplay('endTimeDisplay', customEndTime);
     updateSegmentDuration();
-    
+
     console.log('End time set to:', customEndTime);
 }
 
@@ -1758,7 +2325,7 @@ function setEndTime() {
 function updateSegmentDuration() {
     const durationElement = document.getElementById('segmentDuration');
     if (!durationElement) return;
-    
+
     const duration = Math.max(0, customEndTime - customStartTime);
     durationElement.textContent = `${duration.toFixed(1)}s`;
 }
@@ -1770,12 +2337,12 @@ function createVideoSlide() {
             alert('Please set both start and end times, with end time after start time.');
             return;
         }
-        
+
         if (customEndTime - customStartTime < 1) {
             alert('Video segment must be at least 1 second long.');
             return;
         }
-        
+
         // Create video segment object
         const customSegment = {
             type: 'video',
@@ -1786,30 +2353,30 @@ function createVideoSlide() {
             originalSegment: `custom-${customStartTime}s-${customEndTime}s`,
             campaignName: 'Custom'
         };
-        
+
         console.log('Creating custom video slide:', customSegment);
-        
+
         // Create slide
         const slideIndex = slides.length;
         createSlideFromSegment(customSegment, slideIndex);
-        
+
         // Update UI
         updateSlideList();
         updateNavigation();
-        
+
         // Switch to new slide
         currentSlideIndex = slides.length - 1;
         showSlide(currentSlideIndex);
-        
+
         // Reset times for next creation
         customStartTime = 0;
         customEndTime = 0;
         updateTimeDisplay('startTimeDisplay', 0);
         updateTimeDisplay('endTimeDisplay', 0);
         updateSegmentDuration();
-        
+
         alert('Video slide created successfully!');
-        
+
     } catch (error) {
         console.error('Error creating video slide:', error);
         alert('Error creating video slide. Please try again.');
@@ -1821,9 +2388,9 @@ function createImageSlide() {
     try {
         const timelineScrubber = document.getElementById('timelineScrubber');
         if (!timelineScrubber) return;
-        
+
         const currentTime = parseFloat(timelineScrubber.value);
-        
+
         // Create image segment object
         const customSegment = {
             type: 'image',
@@ -1832,25 +2399,27 @@ function createImageSlide() {
             originalSegment: `custom-img-${currentTime}s`,
             campaignName: 'Custom'
         };
-        
+
         console.log('Creating custom image slide:', customSegment);
-        
+
         // Create slide
         const slideIndex = slides.length;
         createSlideFromSegment(customSegment, slideIndex);
-        
+
         // Update UI
         updateSlideList();
         updateNavigation();
-        
+
         // Switch to new slide
         currentSlideIndex = slides.length - 1;
         showSlide(currentSlideIndex);
-        
+
         alert('Image slide created successfully!');
-        
+
     } catch (error) {
         console.error('Error creating image slide:', error);
         alert('Error creating image slide. Please try again.');
     }
 }
+// Make retry function globally accessible so HTML onclick can find it
+window.retrySafariImageCapture = retrySafariImageCapture;

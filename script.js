@@ -42,14 +42,33 @@ const sampleData = {
 
 // Initialize the presentation
 function init() {
-    console.log('Init called');
+    console.log('\n🏁 STARTING main init()');
+    
     // Wait for DOM to be fully ready
     setTimeout(() => {
-        console.log('Starting initialization');
+        console.log('🔧 Starting main initialization');
         try {
+            // Check if we have a video_url parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasVideoUrl = urlParams.get('video_url');
+            
+            console.log('URL check in main init:', {
+                hasVideoUrl: !!hasVideoUrl,
+                videoUrl: hasVideoUrl
+            });
+            
+            // ALWAYS create the default chart slide first
+            console.log('📊 Creating default chart slide (always)');
             addSlide();
             updateSlideList();
             updateNavigation();
+            console.log('✅ Default chart slide created');
+            
+            if (hasVideoUrl) {
+                console.log('🎬 Video URL found, video slides will be added to existing chart slide');
+            } else {
+                console.log('📊 No video URL found, only chart slide will be available');
+            }
             
             // Add event listeners for iPad interface (with safety checks)
             const bgUpload = document.getElementById('bgUpload');
@@ -70,15 +89,28 @@ function init() {
             
             // Setup drag and drop for slide container
             setupDragAndDrop();
-            console.log('Initialization complete');
+            console.log('✅ Main initialization complete');
+            
+            // Debug slide state after main init
+            setTimeout(() => {
+                debugSlideState('AFTER main init completion');
+            }, 50);
+            
         } catch (error) {
-            console.error('Error during initialization:', error);
+            console.error('❌ Error during main initialization:', error);
         }
     }, 200);
 }
 
 // Toggle customize mode
 function toggleCustomizeMode() {
+    // Check if current slide is a cover slide
+    const currentSlide = slides[currentSlideIndex];
+    if (currentSlide && currentSlide.isCoverSlide) {
+        console.log('Customize disabled for cover slides');
+        return; // Don't allow customize mode for cover slides
+    }
+    
     isCustomizeMode = !isCustomizeMode;
     const slideContainer = document.getElementById('slideContainer');
     const controlPanel = document.getElementById('controlPanel');
@@ -252,7 +284,9 @@ function openTextColorPicker() {
 
 function addSlide() {
     try {
-        console.log('Adding slide...');
+        console.log('\n➕ STARTING addSlide()');
+        debugSlideState('BEFORE adding slide');
+        
         const slideId = `slide-${Date.now()}`;
         const slide = {
             id: slideId,
@@ -264,7 +298,7 @@ function addSlide() {
         };
         
         slides.push(slide);
-        console.log('Slide data created:', slide);
+        console.log('📊 Chart slide data created:', slide);
         
         // Create slide element
         const slideElement = document.createElement('div');
@@ -290,27 +324,61 @@ function addSlide() {
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
             slideContainer.appendChild(slideElement);
-            console.log('Slide element added to container');
+            console.log('📊 Chart slide element added to DOM');
             
             // Switch to new slide
             currentSlideIndex = slides.length - 1;
-            console.log('Current slide index:', currentSlideIndex);
+            console.log('📊 Current slide index set to:', currentSlideIndex);
             
             // Use setTimeout to ensure DOM is updated
             setTimeout(() => {
-                console.log('Calling showSlide from addSlide');
+                console.log('📊 Calling showSlide from addSlide');
                 showSlide(currentSlideIndex);
                 updateSlideList();
                 updateNavigation();
                 updateChart();
+                
+                debugSlideState('AFTER adding chart slide');
             }, 100);
         } else {
-            console.error('Slide container not found');
+            console.error('❌ Slide container not found');
             slides.pop();
         }
+        
+        console.log('✅ COMPLETED addSlide()');
+        
     } catch (error) {
-        console.error('Error in addSlide:', error);
+        console.error('❌ Error in addSlide:', error);
     }
+}
+
+function debugSlideState(location) {
+    console.log(`\n=== SLIDE DEBUG: ${location} ===`);
+    console.log('Total slides:', slides.length);
+    console.log('Current slide index:', currentSlideIndex);
+    
+    slides.forEach((slide, index) => {
+        console.log(`Slide ${index}:`, {
+            id: slide.id,
+            title: slide.title,
+            chartType: slide.chartType,
+            isVideoSlide: slide.isVideoSlide || false,
+            isCoverSlide: slide.isCoverSlide || false,
+            coverPosition: slide.coverPosition || 'n/a'
+        });
+    });
+    
+    // Check DOM elements
+    const slideElements = document.querySelectorAll('.slide');
+    console.log('DOM slide elements:', slideElements.length);
+    slideElements.forEach((el, index) => {
+        console.log(`DOM Slide ${index}:`, {
+            id: el.id,
+            className: el.className,
+            isActive: el.classList.contains('active')
+        });
+    });
+    console.log('=== END SLIDE DEBUG ===\n');
 }
 
 function deleteSlide() {
@@ -342,6 +410,17 @@ function deleteSlide() {
 function showSlide(index) {
     try {
         console.log('showSlide called with index:', index);
+
+        // Handle customize button visibility for cover slides
+        const customizeBtn = document.getElementById('customizeBtn');
+        const slideToShow = slides[index];
+        if (customizeBtn && slideToShow) {
+            if (slideToShow.isCoverSlide) {
+                customizeBtn.style.visibility = 'hidden'; // Make invisible instead of display none
+            } else {
+                customizeBtn.style.visibility = 'visible'; // Make visible
+            }
+        }
         
         // Validate index and slides array
         if (index < 0 || index >= slides.length || !slides[index]) {
@@ -589,8 +668,14 @@ function handleBackgroundFile(file) {
         reader.onload = function(e) {
             globalBackgroundImage = e.target.result;
             
-            // Apply background to all existing slides
+            // Apply background to all existing slides EXCEPT cover slides
             slides.forEach(slide => {
+                // Skip cover slides - they keep their own backgrounds
+                if (slide.isCoverSlide) {
+                    console.log('Skipping background update for cover slide:', slide.title);
+                    return;
+                }
+                
                 slide.backgroundImage = globalBackgroundImage;
                 const slideElement = document.getElementById(slide.id);
                 if (slideElement) {
@@ -615,6 +700,12 @@ function removeBackground() {
         globalBackgroundImage = null;
         
         slides.forEach(slide => {
+            // Skip cover slides - they keep their own backgrounds
+            if (slide.isCoverSlide) {
+                console.log('Skipping background removal for cover slide:', slide.title);
+                return;
+            }
+            
             slide.backgroundImage = null;
             const slideElement = document.getElementById(slide.id);
             if (slideElement) {
