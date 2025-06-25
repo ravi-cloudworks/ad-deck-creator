@@ -966,15 +966,47 @@ function updateSlideList() {
         
         slides.forEach((slide, index) => {
             const slidePreview = document.createElement('div');
-            slidePreview.className = `slide-preview ${index === currentSlideIndex ? 'active' : ''}`;
+            
+            // Add cover-slide class for styling
+            const coverClass = slide.isCoverSlide ? ' cover-slide' : '';
+            slidePreview.className = `slide-preview${coverClass} ${index === currentSlideIndex ? 'active' : ''}`;
+            
             const bgStatus = slide.backgroundImage ? '🖼️' : '';
-            slidePreview.innerHTML = `<strong>${slide.title} ${bgStatus}</strong><br><small>${slide.chartType} chart</small>`;
-            slidePreview.onclick = () => {
-                currentSlideIndex = index;
-                showSlide(currentSlideIndex);
-                updateSlideList();
-                updateNavigation();
+            
+            // Determine slide type for display
+            let slideTypeText = 'chart';
+            if (slide.isCoverSlide) {
+                slideTypeText = 'cover';
+            } else if (slide.isVideoSlide) {
+                slideTypeText = slide.chartType; // 'video' or 'image'
+            }
+            
+            slidePreview.innerHTML = `
+                <strong>${slide.title} ${bgStatus}</strong>
+                <br>
+                <small>${slideTypeText}</small>
+                ${!slide.isCoverSlide ? `
+                    <div class="slide-reorder-controls">
+                        <button class="reorder-btn" 
+                                onclick="moveSlideUp(${index})" 
+                                ${!canMoveSlideUp(index) ? 'disabled' : ''}>⬆️</button>
+                        <button class="reorder-btn" 
+                                onclick="moveSlideDown(${index})" 
+                                ${!canMoveSlideDown(index) ? 'disabled' : ''}>⬇️</button>
+                    </div>
+                ` : ''}
+            `;
+            
+            slidePreview.onclick = (e) => {
+                // Only switch slides if user didn't click on reorder buttons
+                if (!e.target.classList.contains('reorder-btn')) {
+                    currentSlideIndex = index;
+                    showSlide(currentSlideIndex);
+                    updateSlideList();
+                    updateNavigation();
+                }
             };
+            
             slideList.appendChild(slidePreview);
         });
     } catch (error) {
@@ -1419,6 +1451,142 @@ function startVoiceInput(type) {
         }
     } catch (error) {
         console.error('Error with voice input:', error);
+    }
+}
+
+// Slide Reorder Functions
+// Add these to the END of script.js
+
+function canMoveSlideUp(index) {
+    // Check if there's a non-cover slide above this one
+    if (slides[index].isCoverSlide) return false;
+    
+    for (let i = index - 1; i >= 0; i--) {
+        if (!slides[i].isCoverSlide) return true;
+    }
+    return false;
+}
+
+function canMoveSlideDown(index) {
+    // Check if there's a non-cover slide below this one
+    if (slides[index].isCoverSlide) return false;
+    
+    for (let i = index + 1; i < slides.length; i++) {
+        if (!slides[i].isCoverSlide) return true;
+    }
+    return false;
+}
+
+function moveSlideUp(index) {
+    try {
+        console.log('🔼 Moving slide up from index:', index);
+        
+        // Don't move cover slides
+        if (slides[index].isCoverSlide) {
+            console.log('Cannot move cover slide');
+            return;
+        }
+        
+        // Find the previous non-cover slide
+        let targetIndex = -1;
+        for (let i = index - 1; i >= 0; i--) {
+            if (!slides[i].isCoverSlide) {
+                targetIndex = i;
+                break;
+            }
+        }
+        
+        if (targetIndex === -1) {
+            console.log('Already at the top of moveable slides');
+            return;
+        }
+        
+        // Swap the slides
+        swapSlides(index, targetIndex);
+        
+        console.log('✅ Moved slide up successfully');
+        
+    } catch (error) {
+        console.error('❌ Error moving slide up:', error);
+    }
+}
+
+function moveSlideDown(index) {
+    try {
+        console.log('🔽 Moving slide down from index:', index);
+        
+        // Don't move cover slides
+        if (slides[index].isCoverSlide) {
+            console.log('Cannot move cover slide');
+            return;
+        }
+        
+        // Find the next non-cover slide
+        let targetIndex = -1;
+        for (let i = index + 1; i < slides.length; i++) {
+            if (!slides[i].isCoverSlide) {
+                targetIndex = i;
+                break;
+            }
+        }
+        
+        if (targetIndex === -1) {
+            console.log('Already at the bottom of moveable slides');
+            return;
+        }
+        
+        // Swap the slides
+        swapSlides(index, targetIndex);
+        
+        console.log('✅ Moved slide down successfully');
+        
+    } catch (error) {
+        console.error('❌ Error moving slide down:', error);
+    }
+}
+
+function swapSlides(index1, index2) {
+    try {
+        console.log('🔄 Swapping slides:', index1, '↔️', index2);
+        
+        // Remember current slide
+        const wasCurrentSlide1 = (currentSlideIndex === index1);
+        const wasCurrentSlide2 = (currentSlideIndex === index2);
+        
+        // Swap in slides array
+        const temp = slides[index1];
+        slides[index1] = slides[index2];
+        slides[index2] = temp;
+        
+        // Update current slide index if needed
+        if (wasCurrentSlide1) {
+            currentSlideIndex = index2;
+        } else if (wasCurrentSlide2) {
+            currentSlideIndex = index1;
+        }
+        
+        // Swap DOM elements
+        const slideContainer = document.getElementById('slideContainer');
+        const element1 = document.getElementById(slides[index1].id);
+        const element2 = document.getElementById(slides[index2].id);
+        
+        if (element1 && element2 && slideContainer) {
+            // Create temporary placeholder
+            const placeholder = document.createElement('div');
+            slideContainer.insertBefore(placeholder, element1);
+            slideContainer.insertBefore(element1, element2);
+            slideContainer.insertBefore(element2, placeholder);
+            slideContainer.removeChild(placeholder);
+        }
+        
+        // Refresh UI
+        updateSlideList();
+        updateNavigation();
+        
+        console.log('✅ Slide swap completed');
+        
+    } catch (error) {
+        console.error('❌ Error swapping slides:', error);
     }
 }
 

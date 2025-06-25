@@ -880,3 +880,55 @@ input:checked + .slider:before {
 .slide-preview:hover {
     background: rgba(102, 126, 234, 0.05);
 }
+
+/* Slide Reorder Controls */
+.slide-preview {
+    position: relative; /* Make sure this exists for absolute positioning */
+}
+
+.slide-reorder-controls {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 10;
+}
+
+.reorder-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(102, 126, 234, 0.9);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.reorder-btn:hover {
+    background: rgba(102, 126, 234, 1);
+    transform: scale(1.1);
+}
+
+.reorder-btn:active {
+    transform: scale(0.95);
+}
+
+.reorder-btn:disabled {
+    background: rgba(128, 128, 128, 0.5);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Hide reorder controls on cover slides */
+.slide-preview.cover-slide .slide-reorder-controls {
+    display: none;
+}
