@@ -456,7 +456,7 @@ function setupVideoEventListeners() {
 
     masterVideoElement.addEventListener('error', function (e) {
         console.error('Video loading error:', e);
-        alert('Error loading video. Please check the URL and try again.');
+        showshowAlert('Error loading video. Please check the URL and try again.');
     });
 
     masterVideoElement.addEventListener('canplay', function () {
@@ -1764,12 +1764,12 @@ function updateImageSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide || !currentSlide.isVideoSlide || !currentSlide.videoSegment) {
-            alert('Please select an image slide to update.');
+            showAlert('Please select an image slide to update.');
             return;
         }
 
         if (currentSlide.videoSegment.type !== 'image') {
-            alert('Please select an image slide to update.');
+            showAlert('Please select an image slide to update.');
             return;
         }
 
@@ -1802,11 +1802,11 @@ function updateImageSlide() {
         // Refresh the slide to capture new frame
         showSlide(currentSlideIndex);
 
-        alert(`Image slide updated successfully! New frame time: ${editImageFrameTime}s`);
+        showAlert(`Image slide updated successfully! New frame time: ${editImageFrameTime}s`);
 
     } catch (error) {
         console.error('Error updating image slide:', error);
-        alert('Error updating image slide. Please try again.');
+        showAlert('Error updating image slide. Please try again.');
     }
 }
 
@@ -1875,17 +1875,17 @@ function updateVideoSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide || !currentSlide.isVideoSlide || !currentSlide.videoSegment) {
-            alert('Please select a video slide to update.');
+            showAlert('Please select a video slide to update.');
             return;
         }
 
         if (editEndTime <= editStartTime) {
-            alert('Please set both start and end times, with end time after start time.');
+            showAlert('Please set both start and end times, with end time after start time.');
             return;
         }
 
         if (editEndTime - editStartTime < 1) {
-            alert('Video segment must be at least 1 second long.');
+            showAlert('Video segment must be at least 1 second long.');
             return;
         }
 
@@ -1900,11 +1900,11 @@ function updateVideoSlide() {
         // Refresh the slide
         showSlide(currentSlideIndex);
 
-        alert('Video slide updated successfully!');
+        showAlert('Video slide updated successfully!');
 
     } catch (error) {
         console.error('Error updating video slide:', error);
-        alert('Error updating video slide. Please try again.');
+        showAlert('Error updating video slide. Please try again.');
     }
 }
 
@@ -2078,11 +2078,11 @@ function createImageSlide() {
         currentSlideIndex = slides.length - 1;
         showSlide(currentSlideIndex);
 
-        alert('Image slide created successfully!');
+        showAlert('Image slide created successfully!');
 
     } catch (error) {
         console.error('Error creating image slide:', error);
-        alert('Error creating image slide. Please try again.');
+        showAlert('Error creating image slide. Please try again.');
     }
 }
 
@@ -2149,7 +2149,7 @@ function editCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide || !currentSlide.isVideoSlide || !currentSlide.videoSegment) {
-            alert('Please select a video slide to edit.');
+            showAlert('Please select a video slide to edit.');
             return;
         }
 
@@ -2165,7 +2165,7 @@ function editCurrentSlide() {
                 const endTime = parseFloat(newEndTime);
 
                 if (isNaN(startTime) || isNaN(endTime) || startTime >= endTime) {
-                    alert('Invalid times. End time must be greater than start time.');
+                    showAlert('Invalid times. End time must be greater than start time.');
                     return;
                 }
 
@@ -2182,7 +2182,7 @@ function editCurrentSlide() {
                     showSlide(currentSlideIndex);
                 }
 
-                alert('Slide timing updated successfully!');
+                showAlert('Slide timing updated successfully!');
             }
         } else {
             // For image slides, allow editing the frame time
@@ -2192,7 +2192,7 @@ function editCurrentSlide() {
                 const frameTime = parseFloat(newTime);
 
                 if (isNaN(frameTime) || frameTime < 0) {
-                    alert('Invalid time. Please enter a valid number.');
+                    showAlert('Invalid time. Please enter a valid number.');
                     return;
                 }
 
@@ -2207,13 +2207,13 @@ function editCurrentSlide() {
                     showSlide(currentSlideIndex);
                 }
 
-                alert('Image frame time updated successfully!');
+                showAlert('Image frame time updated successfully!');
             }
         }
 
     } catch (error) {
         console.error('Error editing current slide:', error);
-        alert('Error editing slide. Please try again.');
+        showAlert('Error editing slide. Please try again.');
     }
 }
 
@@ -2222,28 +2222,26 @@ function deleteCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) {
-            alert('No slide selected to delete.');
+           showshowAlert('No slide selected to delete.');
             return;
         }
 
         // Prevent deleting cover slides
         if (currentSlide.isCoverSlide) {
-            alert('Cannot delete cover slides.');
+            showshowAlert('Cannot delete cover slides.');
             return;
         }
 
         // Check if it's the last remaining non-cover slide
         const nonCoverSlides = slides.filter(slide => !slide.isCoverSlide);
         if (nonCoverSlides.length <= 1) {
-            alert('Cannot delete the last slide! At least one slide is required.');
+            showshowAlert('Cannot delete the last slide! At least one slide is required.');
             return;
         }
 
         // Confirm deletion
-        const confirmDelete = confirm(`Are you sure you want to delete "${currentSlide.title}"?`);
-        if (!confirmDelete) {
-            return;
-        }
+        showConfirm(`Are you sure you want to delete "${currentSlide.title}"?`, (confirmed) => {
+            if (!confirmed) return;
 
         console.log('🗑️ Deleting current slide:', currentSlide.title);
 
@@ -2281,10 +2279,10 @@ function deleteCurrentSlide() {
         }
 
         console.log('✅ Slide deleted successfully');
-
+    });
     } catch (error) {
         console.error('❌ Error in deleteCurrentSlide:', error);
-        alert('Error deleting slide. Please try again.');
+        showAlert('Error deleting slide. Please try again.');
     }
 }
 
@@ -2450,12 +2448,12 @@ function createTimelineMarkers(videoDuration) {
 // function createVideoSlide() {
 //     try {
 //         if (customEndTime <= customStartTime) {
-//             alert('Please set both start and end times, with end time after start time.');
+//             showAlert('Please set both start and end times, with end time after start time.');
 //             return;
 //         }
 
 //         if (customEndTime - customStartTime < 1) {
-//             alert('Video segment must be at least 1 second long.');
+//             showAlert('Video segment must be at least 1 second long.');
 //             return;
 //         }
 
@@ -2491,11 +2489,11 @@ function createTimelineMarkers(videoDuration) {
 //         updateTimeDisplay('endTimeDisplay', 0);
 //         updateSegmentDuration();
 
-//         alert('Video slide created successfully!');
+//         showAlert('Video slide created successfully!');
 
 //     } catch (error) {
 //         console.error('Error creating video slide:', error);
-//         alert('Error creating video slide. Please try again.');
+//         showAlert('Error creating video slide. Please try again.');
 //     }
 // }
 
@@ -2530,11 +2528,11 @@ function createTimelineMarkers(videoDuration) {
 //         currentSlideIndex = slides.length - 1;
 //         showSlide(currentSlideIndex);
 
-//         alert('Image slide created successfully!');
+//         showAlert('Image slide created successfully!');
 
 //     } catch (error) {
 //         console.error('Error creating image slide:', error);
-//         alert('Error creating image slide. Please try again.');
+//         showAlert('Error creating image slide. Please try again.');
 //     }
 // }
 // Make retry function globally accessible so HTML onclick can find it

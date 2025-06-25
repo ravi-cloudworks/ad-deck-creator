@@ -415,7 +415,7 @@ function addVideoSlide() {
         
         // Check if video is loaded
         if (!masterVideoElement || !masterVideoElement.duration) {
-            alert('Please load a video first to create video slides.');
+            showshowAlert('Please load a video first to create video slides.');
             return;
         }
         
@@ -466,7 +466,7 @@ function addImageSlide() {
         
         // Check if video is loaded
         if (!masterVideoElement || !masterVideoElement.duration) {
-            alert('Please load a video first to create image slides.');
+            showshowAlert('Please load a video first to create image slides.');
             return;
         }
         
@@ -545,7 +545,7 @@ function debugSlideState(location) {
 function deleteSlide() {
     try {
         if (slides.length <= 1) {
-            alert('Cannot delete the last slide!');
+            showAlert('Cannot delete the last slide!');
             return;
         }
         
@@ -1153,7 +1153,7 @@ function addDataPoint() {
         
         // Limit to max 12 data points
         if (data.xAxis.length >= 12) {
-            alert('Maximum 12 time periods allowed');
+            showshowAlert('Maximum 12 time periods allowed');
             return;
         }
         
@@ -1199,7 +1199,7 @@ function removeDataPoint() {
         
         // Minimum 2 data points
         if (data.xAxis.length <= 2) {
-            alert('Minimum 2 time periods required');
+            showshowAlert('Minimum 2 time periods required');
             return;
         }
         
@@ -1230,7 +1230,7 @@ function addSeries() {
         
         // Limit to max 6 series
         if (data.series.length >= 6) {
-            alert('Maximum 6 data series allowed');
+            showshowAlert('Maximum 6 data series allowed');
             return;
         }
         
@@ -1278,7 +1278,7 @@ function removeSeries() {
         
         // Minimum 1 series
         if (data.series.length <= 1) {
-            alert('Minimum 1 data series required');
+            showshowAlert('Minimum 1 data series required');
             return;
         }
         
@@ -1643,6 +1643,37 @@ function swapSlides(index1, index2) {
     } catch (error) {
         console.error('❌ Error swapping slides:', error);
     }
+}
+
+// Custom alert replacements for iOS WebView compatibility
+function showshowAlert(message) {
+    // Create simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'custom-alert';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+function showConfirm(message, callback) {
+    // Create simple confirm dialog
+    const modal = document.createElement('div');
+    modal.className = 'custom-confirm';
+    modal.innerHTML = `
+        <div class="confirm-content">
+            <p>${message}</p>
+            <button onclick="confirmYes()">Yes</button>
+            <button onclick="confirmNo()">No</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    window.confirmCallback = callback;
+    window.confirmYes = () => { modal.remove(); callback(true); };
+    window.confirmNo = () => { modal.remove(); callback(false); };
 }
 
 // Initialize the application when page loads
