@@ -298,23 +298,39 @@ function createSlidesFromSegments() {
     if (slideContainer) slideContainer.innerHTML = '';
     slides.length = 0;
 
-    // Add front cover if present
-    if (frontCoverUrl) {
-        createCoverSlide(frontCoverUrl, true);
-    }
-
-    // Add main slides
+    // Create slides for each segment
     videoSegments.forEach((segment, index) => {
         createSlideFromSegment(segment, index);
     });
 
-    // Add back cover if present
-    if (backCoverUrl) {
-        createCoverSlide(backCoverUrl, false);
+    // Set background image for first and last slide if cover URLs are present
+    if (slides.length > 0) {
+        if (frontCoverUrl) {
+            slides[0].backgroundImage = frontCoverUrl;
+            const firstSlideElement = document.getElementById(slides[0].id);
+            if (firstSlideElement) {
+                firstSlideElement.style.backgroundImage = `url(${frontCoverUrl})`;
+                firstSlideElement.style.backgroundSize = 'cover';
+                firstSlideElement.style.backgroundPosition = 'center';
+                firstSlideElement.style.backgroundRepeat = 'no-repeat';
+            }
+        }
+        if (backCoverUrl && slides.length > 1) {
+            slides[slides.length - 1].backgroundImage = backCoverUrl;
+            const lastSlideElement = document.getElementById(slides[slides.length - 1].id);
+            if (lastSlideElement) {
+                lastSlideElement.style.backgroundImage = `url(${backCoverUrl})`;
+                lastSlideElement.style.backgroundSize = 'cover';
+                lastSlideElement.style.backgroundPosition = 'center';
+                lastSlideElement.style.backgroundRepeat = 'no-repeat';
+            }
+        }
     }
 
     updateSlideList();
     updateNavigation();
+
+    console.log(`Created ${videoSegments.length} slides from video segments`);
 }
 
 // Create a single slide from a segment
@@ -1783,42 +1799,6 @@ function createImageSlide() {
     }
 }
 
-// New helper function:
-function createCoverSlide(imageUrl, isFront) {
-    const slideId = `cover-slide-${isFront ? 'front' : 'back'}-${Date.now()}`;
-    const slide = {
-        id: slideId,
-        chartType: 'cover',
-        theme: 'custom',
-        backgroundImage: null,
-        title: isFront ? 'Front Cover' : 'Back Cover',
-        customTextColor: null,
-        isVideoSlide: false,
-        isFrontCover: isFront,
-        isBackCover: !isFront,
-        imageUrl: imageUrl
-    };
-
-    slides.push(slide);
-
-    // Use a container similar to video/image slides for consistent layout
-    const slideElement = document.createElement('div');
-    slideElement.className = 'slide cover-slide';
-    slideElement.id = slideId;
-    slideElement.innerHTML = `
-        <div class="slide-content">
-            <h2 class="slide-title">${slide.title}</h2>
-            <div class="cover-container" style="flex:1;display:flex;align-items:center;justify-content:center;">
-                <img src="${imageUrl}" alt="${slide.title}" style="max-width: 80vw; max-height: 60vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);" />
-            </div>
-        </div>
-    `;
-
-    const slideContainer = document.getElementById('slideContainer');
-    if (slideContainer) {
-        slideContainer.appendChild(slideElement);
-    }
-}
 
 function getDeckSlideCountWithoutCovers() {
     return slides.filter(slide => !slide.isFrontCover && !slide.isBackCover).length;
@@ -1826,3 +1806,14 @@ function getDeckSlideCountWithoutCovers() {
 
 const count = getDeckSlideCountWithoutCovers();
 console.log('Slides (excluding covers):', count);
+
+function handleBackgroundUpload(event) {
+    // ...existing code...
+    // Prevent changing background for cover slides
+    if ((currentSlideIndex === 0 && frontCoverUrl) ||
+        (currentSlideIndex === slides.length - 1 && backCoverUrl)) {
+        alert("Cannot change background of cover slide.");
+        return;
+    }
+    // ...existing code...
+}
