@@ -32,7 +32,7 @@ function initVideoSlides() {
 // MODIFIED: Check video URL parameter with debug
 function checkVideoUrlParameter() {
     console.log('\n🔍 Checking URL parameters...');
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const videoUrl = urlParams.get('video_url');
     const frontCover = urlParams.get('front_cover');
@@ -63,35 +63,35 @@ function checkVideoUrlParameter() {
 function loadBackgroundFromUrl(imageUrl) {
     try {
         console.log('🖼️ Loading background image from URL:', imageUrl);
-        
+
         // Create a temporary image element to load the URL
         const img = new Image();
         img.crossOrigin = 'anonymous'; // Handle CORS if needed
-        
-        img.onload = function() {
+
+        img.onload = function () {
             // Convert image to canvas then to data URL (same format as file upload)
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
+
             canvas.width = img.width;
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0);
-            
+
             // Convert to data URL (same format as FileReader)
             const dataUrl = canvas.toDataURL('image/png');
-            
+
             // Create a fake file-like object
             const fakeFile = {
                 type: 'image/png'
             };
-            
+
             // Reuse the existing background handling logic
             const reader = {
                 result: dataUrl,
-                onload: function() {
+                onload: function () {
                     // Call the existing handleBackgroundFile logic directly
                     globalBackgroundImage = this.result;
-                    
+
                     // Apply background to all existing slides EXCEPT cover slides
                     slides.forEach(slide => {
                         // Skip cover slides - they keep their own backgrounds
@@ -99,7 +99,7 @@ function loadBackgroundFromUrl(imageUrl) {
                             console.log('Skipping background update for cover slide:', slide.title);
                             return;
                         }
-                        
+
                         slide.backgroundImage = globalBackgroundImage;
                         const slideElement = document.getElementById(slide.id);
                         if (slideElement) {
@@ -109,29 +109,29 @@ function loadBackgroundFromUrl(imageUrl) {
                             slideElement.style.backgroundRepeat = 'no-repeat';
                         }
                     });
-                    
+
                     if (typeof updateSlideList === 'function') {
                         updateSlideList();
                     }
                     if (typeof updateChart === 'function') {
                         updateChart();
                     }
-                    
+
                     console.log('✅ Background image applied from URL');
                 }
             };
-            
+
             // Trigger the existing logic
             reader.onload();
         };
-        
-        img.onerror = function() {
+
+        img.onerror = function () {
             console.error('❌ Failed to load background image from URL:', imageUrl);
         };
-        
+
         // Start loading the image
         img.src = imageUrl;
-        
+
     } catch (error) {
         console.error('❌ Error loading background from URL:', error);
     }
@@ -151,7 +151,7 @@ function debugSlideState(location) {
     console.log(`\n=== SLIDE DEBUG: ${location} ===`);
     console.log('Total slides:', slides.length);
     console.log('Current slide index:', currentSlideIndex);
-    
+
     slides.forEach((slide, index) => {
         console.log(`Slide ${index}:`, {
             id: slide.id,
@@ -162,7 +162,7 @@ function debugSlideState(location) {
             coverPosition: slide.coverPosition || 'n/a'
         });
     });
-    
+
     // Check DOM elements
     const slideElements = document.querySelectorAll('.slide');
     console.log('DOM slide elements:', slideElements.length);
@@ -183,7 +183,7 @@ function createCoverSlide(imageUrl, title, position) {
     try {
         console.log(`\n🖼️ Creating ${position} cover slide:`, title);
         debugSlideState(`BEFORE creating ${position} cover`);
-        
+
         const slideId = `cover-slide-${position}-${Date.now()}`;
 
         const slide = {
@@ -220,19 +220,19 @@ function createCoverSlide(imageUrl, title, position) {
             if (position === 'front') {
                 console.log('Inserting front cover at beginning');
                 console.log('Current slide index before insert:', currentSlideIndex);
-                
+
                 // Insert at beginning of arrays and DOM
                 slides.unshift(slide);
                 slideContainer.insertBefore(slideElement, slideContainer.firstChild);
-                
+
                 // Update currentSlideIndex for ALL existing slides
                 // Since we inserted at position 0, everything else shifts right
                 currentSlideIndex++;
                 console.log('Current slide index after insert:', currentSlideIndex);
-                
+
                 // Update the slide order - chart slide is now at index 1
                 console.log('Chart slide is now at index 1 (after front cover)');
-                
+
             } else {
                 console.log('Adding back cover at end');
                 slides.push(slide);
@@ -253,9 +253,9 @@ function loadVideoFromUrl(videoUrl) {
     try {
         console.log('\n🎬 STARTING loadVideoFromUrl:', videoUrl);
         debugSlideState('BEFORE loading video');
-        
+
         currentVideoUrl = videoUrl;
-        
+
         // Extract filename from URL (handle both full URLs and filenames)
         let filename;
         if (videoUrl.includes('/')) {
@@ -263,57 +263,57 @@ function loadVideoFromUrl(videoUrl) {
         } else {
             filename = videoUrl;
         }
-        
+
         console.log('Parsing filename:', filename);
-        
+
         // Parse segments from filename
         videoSegments = parseVideoSegments(filename);
         console.log('Parsed video segments:', videoSegments);
-        
+
         // Set video source
         masterVideoElement.src = videoUrl;
-        
+
         // Setup timeline previews if controls exist
         const timelinePreview = document.getElementById('timelinePreview');
         if (timelinePreview) {
             timelinePreview.src = videoUrl;
             setupTimelinePreview();
         }
-        
+
         const editTimelinePreview = document.getElementById('editTimelinePreview');
         if (editTimelinePreview) {
             editTimelinePreview.src = videoUrl;
         }
-        
+
         const imageTimelinePreview = document.getElementById('imageTimelinePreview');
         if (imageTimelinePreview) {
             imageTimelinePreview.src = videoUrl;
             setupImageTimelinePreview();
         }
-        
+
         // Create slides based on segments
         if (videoSegments.length > 0) {
             console.log('Creating slides from', videoSegments.length, 'segments...');
             createSlidesFromSegments();
-            
+
             // FIXED: Show appropriate initial slide after all slides are created
             setTimeout(() => {
                 console.log('Setting up initial slide display...');
                 debugSlideState('BEFORE initial slide display');
-                
+
                 if (slides.length > 0) {
                     // Always start with the front cover if it exists
                     const frontCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'front');
-                    
+
                     if (frontCoverIndex !== -1) {
                         console.log('Starting with front cover at index:', frontCoverIndex);
                         currentSlideIndex = frontCoverIndex;
                     } else {
                         // No front cover, start with first slide
                         console.log('No front cover, starting with first slide');
-                        currentSlideIndex = 0;  
+                        currentSlideIndex = 0;
                     }
-                    
+
                     console.log('Showing initial slide at index:', currentSlideIndex);
                     showSlide(currentSlideIndex);
                     debugSlideState('AFTER initial slide display');
@@ -322,9 +322,9 @@ function loadVideoFromUrl(videoUrl) {
         } else {
             console.log('No video segments found, keeping existing slides');
         }
-        
+
         console.log('✅ COMPLETED loadVideoFromUrl');
-        
+
     } catch (error) {
         console.error('❌ Error loading video from URL:', error);
     }
@@ -526,7 +526,7 @@ function validateSegments() {
 function createSlidesFromSegments() {
     console.log('\n🔍 STARTING createSlidesFromSegments');
     debugSlideState('BEFORE creating video slides');
-    
+
     if (videoSegments.length === 0) {
         console.log('No video segments to create slides from');
         return;
@@ -538,7 +538,7 @@ function createSlidesFromSegments() {
     // Get current slide count to know where to insert
     const existingSlideCount = slides.length;
     console.log('Existing slides before video processing:', existingSlideCount);
-    
+
     // Check for cover images and background image
     const { frontCover, backCover } = checkCoverParameters();
     console.log('Cover images:', { frontCover: !!frontCover, backCover: !!backCover });
@@ -556,7 +556,7 @@ function createSlidesFromSegments() {
         console.log(`Creating slide ${index + 1}/${videoSegments.length} for segment:`, segment.title);
         createSlideFromSegmentFixed(segment, index);
     });
-    
+
     debugSlideState('AFTER creating video segment slides');
 
     // STEP 3: Create back cover if exists (add at end)
@@ -593,9 +593,9 @@ function createSlideFromSegmentFixed(segment, index) {
 
         // CORRECT INSERTION LOGIC:
         // Order should be: Front Cover -> Chart Slide -> Video Slides -> Back Cover
-        
+
         const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
-        
+
         if (backCoverIndex !== -1) {
             // Insert before back cover
             slides.splice(backCoverIndex, 0, slide);
@@ -975,10 +975,10 @@ function playVideoSegment(slideId) {
 // Capture video frame for image slides
 function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
     const maxRetries = 5; // Increased for Safari
-    
+
     try {
         console.log(`Safari: Attempting to capture frame for ${segment.title} at ${segment.time}s (attempt ${retryCount + 1})`);
-        
+
         const slideElement = document.getElementById(slideId);
         if (!slideElement) {
             console.error('Slide element not found:', slideId);
@@ -1026,19 +1026,19 @@ function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
 
         // Set current time and wait for Safari to actually seek
         masterVideoElement.currentTime = segment.time;
-        
+
         // Safari-specific: Use multiple event listeners for better compatibility
         let seekCompleted = false;
         let timeoutId = null;
-        
+
         const completeCapture = () => {
             if (seekCompleted) return; // Prevent double execution
             seekCompleted = true;
-            
+
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
-            
+
             // Additional delay for Safari to ensure frame is ready
             setTimeout(() => {
                 performSafariFrameCapture(slideId, segment, retryCount);
@@ -1063,7 +1063,7 @@ function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
         // Set up event listeners
         masterVideoElement.addEventListener('seeked', onSeeked, { once: true });
         masterVideoElement.addEventListener('timeupdate', onTimeUpdate);
-        
+
         // Safari fallback: Force capture after timeout
         timeoutId = setTimeout(() => {
             if (!seekCompleted) {
@@ -1090,7 +1090,7 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
     try {
         const slideElement = document.getElementById(slideId);
         const placeholder = slideElement?.querySelector('.image-placeholder');
-        
+
         if (!slideElement || !placeholder) {
             console.error('Safari: Slide elements not found during capture');
             return;
@@ -1111,9 +1111,9 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
 
         // Create canvas with Safari-compatible settings
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { 
+        const ctx = canvas.getContext('2d', {
             alpha: false, // Better performance on Safari
-            willReadFrequently: false 
+            willReadFrequently: false
         });
 
         // Set canvas size
@@ -1127,12 +1127,12 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
         try {
             // Draw current video frame to canvas
             ctx.drawImage(masterVideoElement, 0, 0, videoWidth, videoHeight);
-            
+
             // Safari-specific: Check if canvas has valid content
             const imageData = ctx.getImageData(0, 0, Math.min(100, videoWidth), Math.min(100, videoHeight));
             const pixels = imageData.data;
             let hasContent = false;
-            
+
             // Check first 100x100 pixels for any non-black content
             for (let i = 0; i < pixels.length; i += 4) {
                 if (pixels[i] > 20 || pixels[i + 1] > 20 || pixels[i + 2] > 20) {
@@ -1140,7 +1140,7 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
                     break;
                 }
             }
-            
+
             if (!hasContent) {
                 console.warn('Safari: Captured frame appears empty, retrying...');
                 if (retryCount < 3) {
@@ -1168,7 +1168,7 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
         // Create image frame container
         const frameContainer = document.createElement('div');
         frameContainer.className = 'image-frame';
-        
+
         // Safari-compatible canvas styling
         const displayCanvas = document.createElement('canvas');
         displayCanvas.width = videoWidth;
@@ -1180,11 +1180,11 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
             display: block;
             margin: 0 auto;
         `;
-        
+
         // Copy canvas content
         const displayCtx = displayCanvas.getContext('2d', { alpha: false });
         displayCtx.drawImage(canvas, 0, 0);
-        
+
         frameContainer.appendChild(displayCanvas);
 
         // Replace placeholder with image frame
@@ -1208,9 +1208,9 @@ function showImageErrorSafari(slideId, errorMessage) {
     try {
         const slideElement = document.getElementById(slideId);
         const placeholder = slideElement?.querySelector('.image-placeholder');
-        
+
         if (!slideElement || !placeholder) return;
-        
+
         // Safari-friendly error display
         placeholder.innerHTML = `
             <div style="text-align: center; padding: 20px;">
@@ -1225,9 +1225,9 @@ function showImageErrorSafari(slideId, errorMessage) {
                 </button>
             </div>
         `;
-        
+
         console.error(`Safari: Image capture failed for slide ${slideId}: ${errorMessage}`);
-        
+
     } catch (error) {
         console.error('Safari: Error showing image error:', error);
     }
@@ -1238,13 +1238,13 @@ function retrySafariImageCapture(slideId) {
     try {
         const slide = slides.find(s => s.id === slideId);
         if (!slide || !slide.videoSegment) return;
-        
+
         console.log('Safari: Retrying image capture for:', slide.videoSegment.title);
-        
+
         // Reset the placeholder with loading state
         const slideElement = document.getElementById(slideId);
         const container = slideElement?.querySelector('.image-frame') || slideElement?.querySelector('.image-placeholder');
-        
+
         if (container) {
             const newPlaceholder = document.createElement('div');
             newPlaceholder.className = 'image-placeholder';
@@ -1254,12 +1254,12 @@ function retrySafariImageCapture(slideId) {
             `;
             container.parentNode.replaceChild(newPlaceholder, container);
         }
-        
+
         // Retry capture with delay
         setTimeout(() => {
             captureVideoFrameSafari(slideId, slide.videoSegment, 0);
         }, 1000);
-        
+
     } catch (error) {
         console.error('Safari: Error retrying image capture:', error);
     }
@@ -1694,7 +1694,7 @@ function setupEditImageSection(slide) {
                 // Add event listener for edit image scrubber
                 editImageTimelineScrubber.removeEventListener('input', handleEditImageTimelineChange);
                 editImageTimelineScrubber.addEventListener('input', handleEditImageTimelineChange);
-                
+
                 console.log('Image timeline scrubber setup with max:', Math.floor(masterVideoElement.duration), 'current:', segment.time);
             }
         }
@@ -1729,11 +1729,11 @@ function handleEditImageTimelineChange(event) {
 
         // Update current time display
         updateTimeDisplay('editImageCurrentTimeDisplay', time);
-        
+
         // IMPORTANT FIX: Auto-update the frame time as user drags slider
         editImageFrameTime = time;
         updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
-        
+
         console.log('Edit image timeline changed to:', time, 'editImageFrameTime updated to:', editImageFrameTime);
 
     } catch (error) {
@@ -1748,10 +1748,10 @@ function setEditImageFrameTime() {
 
     // Get the current slider value
     const newFrameTime = parseFloat(editImageTimelineScrubber.value);
-    
+
     // Update the global variable
     editImageFrameTime = newFrameTime;
-    
+
     // Update the display
     updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
 
@@ -1775,7 +1775,7 @@ function updateImageSlide() {
 
         // IMPORTANT FIX: Use the current editImageFrameTime value
         console.log('Updating image slide with time:', editImageFrameTime);
-        
+
         // Update the segment
         const segment = currentSlide.videoSegment;
         segment.time = editImageFrameTime;
@@ -2225,67 +2225,63 @@ function deleteCurrentSlide() {
             alert('No slide selected to delete.');
             return;
         }
-        
+
         // Prevent deleting cover slides
         if (currentSlide.isCoverSlide) {
             alert('Cannot delete cover slides.');
             return;
         }
-        
+
         // Check if it's the last remaining non-cover slide
         const nonCoverSlides = slides.filter(slide => !slide.isCoverSlide);
         if (nonCoverSlides.length <= 1) {
             alert('Cannot delete the last slide! At least one slide is required.');
             return;
         }
-        
+
         // Confirm deletion
         const confirmDelete = confirm(`Are you sure you want to delete "${currentSlide.title}"?`);
         if (!confirmDelete) {
             return;
         }
-        
+
         console.log('🗑️ Deleting current slide:', currentSlide.title);
-        
+
         // Remove slide element from DOM
         const slideToRemove = document.getElementById(currentSlide.id);
         if (slideToRemove) {
             slideToRemove.remove();
             console.log('🗑️ Slide element removed from DOM');
         }
-        
+
         // Remove from slides array
         slides.splice(currentSlideIndex, 1);
         console.log('🗑️ Slide removed from array');
-        
-        // Adjust current slide index
+
+        // FIXED: Simple logic - show whatever slide is now at the current position
         if (currentSlideIndex >= slides.length) {
+            // If we deleted the last slide, go to the previous one
             currentSlideIndex = slides.length - 1;
+            console.log('📍 Deleted last slide, showing previous slide');
+        } else {
+            // Show the slide that moved into the deleted position
+            console.log('📍 Showing slide that moved to current position');
         }
-        
-        // Ensure we don't land on a cover slide if possible
-        if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide) {
-            // Try to find a non-cover slide
-            const nonCoverIndex = slides.findIndex(slide => !slide.isCoverSlide);
-            if (nonCoverIndex !== -1) {
-                currentSlideIndex = nonCoverIndex;
-            }
-        }
-        
+
         console.log('🗑️ New current slide index:', currentSlideIndex);
-        
+
         // Update UI
         showSlide(currentSlideIndex);
         updateSlideList();
         updateNavigation();
-        
+
         // Close customize mode if we're now on a cover slide
         if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide && isCustomizeMode) {
             toggleCustomizeMode();
         }
-        
+
         console.log('✅ Slide deleted successfully');
-        
+
     } catch (error) {
         console.error('❌ Error in deleteCurrentSlide:', error);
         alert('Error deleting slide. Please try again.');
