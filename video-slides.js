@@ -296,22 +296,22 @@ function loadVideoFromUrl(videoUrl) {
             console.log('Creating slides from', videoSegments.length, 'segments...');
             createSlidesFromSegments();
             
-            // Show appropriate initial slide after all slides are created
+            // FIXED: Show appropriate initial slide after all slides are created
             setTimeout(() => {
                 console.log('Setting up initial slide display...');
                 debugSlideState('BEFORE initial slide display');
                 
                 if (slides.length > 0) {
-                    const { frontCover } = checkCoverParameters();
+                    // Always start with the front cover if it exists
+                    const frontCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'front');
                     
-                    if (frontCover) {
-                        // If we have a front cover, start there
-                        console.log('Starting with front cover at index 0');
-                        currentSlideIndex = 0;
+                    if (frontCoverIndex !== -1) {
+                        console.log('Starting with front cover at index:', frontCoverIndex);
+                        currentSlideIndex = frontCoverIndex;
                     } else {
-                        // No front cover, start with chart slide (which should be at index 0)
-                        console.log('No front cover, starting with chart slide at index 0');
-                        currentSlideIndex = 0;
+                        // No front cover, start with first slide
+                        console.log('No front cover, starting with first slide');
+                        currentSlideIndex = 0;  
                     }
                     
                     console.log('Showing initial slide at index:', currentSlideIndex);
@@ -539,27 +539,27 @@ function createSlidesFromSegments() {
     const existingSlideCount = slides.length;
     console.log('Existing slides before video processing:', existingSlideCount);
     
-    // Check for cover images
+    // Check for cover images and background image
     const { frontCover, backCover } = checkCoverParameters();
     console.log('Cover images:', { frontCover: !!frontCover, backCover: !!backCover });
 
-    // Create front cover if exists (insert at beginning)
+    // STEP 1: Create front cover if exists (insert at beginning)  
     if (frontCover) {
         console.log('Creating front cover...');
         createCoverSlide(frontCover, 'Front Cover', 'front');
         debugSlideState('AFTER creating front cover');
     }
 
-    // Create slides for each segment - Insert AFTER chart slide but BEFORE back cover
+    // STEP 2: Create slides for each segment (these go AFTER front cover and chart slide, BEFORE back cover)
     console.log('Creating slides for', videoSegments.length, 'video segments...');
     videoSegments.forEach((segment, index) => {
         console.log(`Creating slide ${index + 1}/${videoSegments.length} for segment:`, segment.title);
-        createSlideFromSegment(segment, index);
+        createSlideFromSegmentFixed(segment, index);
     });
     
     debugSlideState('AFTER creating video segment slides');
 
-    // Create back cover if exists (add at end)
+    // STEP 3: Create back cover if exists (add at end)
     if (backCover) {
         console.log('Creating back cover...');
         createCoverSlide(backCover, 'Back Cover', 'back');
@@ -574,8 +574,9 @@ function createSlidesFromSegments() {
     console.log(`✅ COMPLETED: Created ${slides.length} slides total (${existingSlideCount} existing + ${newSlideCount} new)`);
     debugSlideState('FINAL STATE after createSlidesFromSegments');
 }
+
 // Create a single slide from a segment
-function createSlideFromSegment(segment, index) {
+function createSlideFromSegmentFixed(segment, index) {
     try {
         const slideId = `video-slide-${Date.now()}-${index}`;
 
@@ -586,13 +587,24 @@ function createSlideFromSegment(segment, index) {
             backgroundImage: globalBackgroundImage,
             title: segment.title,
             customTextColor: null,
-            // Video-specific properties
             videoSegment: segment,
             isVideoSlide: true
         };
 
-        // Add to slides array (from main script.js)
-        slides.push(slide);
+        // CORRECT INSERTION LOGIC:
+        // Order should be: Front Cover -> Chart Slide -> Video Slides -> Back Cover
+        
+        const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
+        
+        if (backCoverIndex !== -1) {
+            // Insert before back cover
+            slides.splice(backCoverIndex, 0, slide);
+            console.log(`Inserted ${segment.title} before back cover at index ${backCoverIndex}`);
+        } else {
+            // No back cover, add at end
+            slides.push(slide);
+            console.log(`Added ${segment.title} at end, index ${slides.length - 1}`);
+        }
 
         // Create slide element
         const slideElement = document.createElement('div');
@@ -633,16 +645,30 @@ function createSlideFromSegment(segment, index) {
             slideElement.style.backgroundRepeat = 'no-repeat';
         }
 
-        // Add to slide container
+        // DOM INSERTION: Insert in correct position
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
-            slideContainer.appendChild(slideElement);
+            if (backCoverIndex !== -1) {
+                // Find the back cover element and insert before it
+                const currentBackCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
+                const backCoverElement = document.getElementById(slides[currentBackCoverIndex].id);
+                if (backCoverElement) {
+                    slideContainer.insertBefore(slideElement, backCoverElement);
+                    console.log(`DOM: Inserted ${segment.title} before back cover element`);
+                } else {
+                    slideContainer.appendChild(slideElement);
+                    console.log(`DOM: Appended ${segment.title} (back cover element not found)`);
+                }
+            } else {
+                slideContainer.appendChild(slideElement);
+                console.log(`DOM: Appended ${segment.title} at end`);
+            }
         }
 
-        console.log('Created slide for segment:', segment.title);
+        console.log('✅ Created slide for segment:', segment.title);
 
     } catch (error) {
-        console.error('Error creating slide from segment:', error);
+        console.error('❌ Error creating slide from segment:', error);
     }
 }
 
@@ -1668,10 +1694,12 @@ function setupEditImageSection(slide) {
                 // Add event listener for edit image scrubber
                 editImageTimelineScrubber.removeEventListener('input', handleEditImageTimelineChange);
                 editImageTimelineScrubber.addEventListener('input', handleEditImageTimelineChange);
+                
+                console.log('Image timeline scrubber setup with max:', Math.floor(masterVideoElement.duration), 'current:', segment.time);
             }
         }
 
-        // Pre-fill with current slide's time
+        // IMPORTANT FIX: Initialize editImageFrameTime with current slide's time
         editImageFrameTime = segment.time;
         updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
 
@@ -1680,7 +1708,7 @@ function setupEditImageSection(slide) {
             updateTimeDisplay('editImageTotalTimeDisplay', masterVideoElement.duration);
         }
 
-        console.log('Edit image section setup complete for:', segment.title);
+        console.log('Edit image section setup complete for:', segment.title, 'at time:', editImageFrameTime);
 
     } catch (error) {
         console.error('Error setting up edit image section:', error);
@@ -1701,6 +1729,12 @@ function handleEditImageTimelineChange(event) {
 
         // Update current time display
         updateTimeDisplay('editImageCurrentTimeDisplay', time);
+        
+        // IMPORTANT FIX: Auto-update the frame time as user drags slider
+        editImageFrameTime = time;
+        updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
+        
+        console.log('Edit image timeline changed to:', time, 'editImageFrameTime updated to:', editImageFrameTime);
 
     } catch (error) {
         console.error('Error handling edit image timeline change:', error);
@@ -1712,11 +1746,18 @@ function setEditImageFrameTime() {
     const editImageTimelineScrubber = document.getElementById('editImageTimelineScrubber');
     if (!editImageTimelineScrubber) return;
 
-    editImageFrameTime = parseFloat(editImageTimelineScrubber.value);
+    // Get the current slider value
+    const newFrameTime = parseFloat(editImageTimelineScrubber.value);
+    
+    // Update the global variable
+    editImageFrameTime = newFrameTime;
+    
+    // Update the display
     updateTimeDisplay('editImageFrameTimeDisplay', editImageFrameTime);
 
-    console.log('Edit image frame time set to:', editImageFrameTime);
+    console.log('Set frame time button clicked - editImageFrameTime set to:', editImageFrameTime);
 }
+
 
 // Update current image slide
 function updateImageSlide() {
@@ -1732,16 +1773,36 @@ function updateImageSlide() {
             return;
         }
 
+        // IMPORTANT FIX: Use the current editImageFrameTime value
+        console.log('Updating image slide with time:', editImageFrameTime);
+        
         // Update the segment
         const segment = currentSlide.videoSegment;
         segment.time = editImageFrameTime;
 
-        console.log('Updated image slide:', segment.title);
+        console.log('Updated image slide:', segment.title, 'to time:', segment.time);
 
-        // Refresh the slide
+        // Force refresh the slide by removing existing image frame
+        const slideElement = document.getElementById(currentSlide.id);
+        if (slideElement) {
+            const existingFrame = slideElement.querySelector('.image-frame');
+            if (existingFrame) {
+                // Replace with placeholder to force recapture
+                const newPlaceholder = document.createElement('div');
+                newPlaceholder.className = 'image-placeholder';
+                newPlaceholder.innerHTML = `
+                    🖼️ Campaign Image
+                    <div class="image-details">Video frame capture</div>
+                `;
+                existingFrame.parentNode.replaceChild(newPlaceholder, existingFrame);
+                console.log('Removed existing frame to force recapture');
+            }
+        }
+
+        // Refresh the slide to capture new frame
         showSlide(currentSlideIndex);
 
-        alert('Image slide updated successfully!');
+        alert(`Image slide updated successfully! New frame time: ${editImageFrameTime}s`);
 
     } catch (error) {
         console.error('Error updating image slide:', error);
@@ -2160,22 +2221,81 @@ function editCurrentSlide() {
 function deleteCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
-        if (!currentSlide || !currentSlide.isVideoSlide) {
-            alert('Please select a video slide to delete.');
+        if (!currentSlide) {
+            alert('No slide selected to delete.');
             return;
         }
-
-        const confirmDelete = confirm(`Are you sure you want to delete "${currentSlide.title}"?`);
-
-        if (confirmDelete) {
-            // Use existing delete function
-            deleteSlide();
+        
+        // Prevent deleting cover slides
+        if (currentSlide.isCoverSlide) {
+            alert('Cannot delete cover slides.');
+            return;
         }
-
+        
+        // Check if it's the last remaining non-cover slide
+        const nonCoverSlides = slides.filter(slide => !slide.isCoverSlide);
+        if (nonCoverSlides.length <= 1) {
+            alert('Cannot delete the last slide! At least one slide is required.');
+            return;
+        }
+        
+        // Confirm deletion
+        const confirmDelete = confirm(`Are you sure you want to delete "${currentSlide.title}"?`);
+        if (!confirmDelete) {
+            return;
+        }
+        
+        console.log('🗑️ Deleting current slide:', currentSlide.title);
+        
+        // Remove slide element from DOM
+        const slideToRemove = document.getElementById(currentSlide.id);
+        if (slideToRemove) {
+            slideToRemove.remove();
+            console.log('🗑️ Slide element removed from DOM');
+        }
+        
+        // Remove from slides array
+        slides.splice(currentSlideIndex, 1);
+        console.log('🗑️ Slide removed from array');
+        
+        // Adjust current slide index
+        if (currentSlideIndex >= slides.length) {
+            currentSlideIndex = slides.length - 1;
+        }
+        
+        // Ensure we don't land on a cover slide if possible
+        if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide) {
+            // Try to find a non-cover slide
+            const nonCoverIndex = slides.findIndex(slide => !slide.isCoverSlide);
+            if (nonCoverIndex !== -1) {
+                currentSlideIndex = nonCoverIndex;
+            }
+        }
+        
+        console.log('🗑️ New current slide index:', currentSlideIndex);
+        
+        // Update UI
+        showSlide(currentSlideIndex);
+        updateSlideList();
+        updateNavigation();
+        
+        // Close customize mode if we're now on a cover slide
+        if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide && isCustomizeMode) {
+            toggleCustomizeMode();
+        }
+        
+        console.log('✅ Slide deleted successfully');
+        
     } catch (error) {
-        console.error('Error deleting current slide:', error);
+        console.error('❌ Error in deleteCurrentSlide:', error);
         alert('Error deleting slide. Please try again.');
     }
+}
+
+// Update the existing deleteSlide function to use the new logic
+function deleteSlide() {
+    // Just call the new function for consistency
+    deleteCurrentSlide();
 }
 
 // Initialize video timeline controls
@@ -2288,138 +2408,138 @@ function createTimelineMarkers(videoDuration) {
 }
 
 // Video slide creation variables
-let customStartTime = 0;
-let customEndTime = 0;
+// let customStartTime = 0;
+// let customEndTime = 0;
 
 // Set start time for custom video segment
-function setStartTime() {
-    const timelineScrubber = document.getElementById('timelineScrubber');
-    if (!timelineScrubber) return;
+// function setStartTime() {
+//     const timelineScrubber = document.getElementById('timelineScrubber');
+//     if (!timelineScrubber) return;
 
-    customStartTime = parseFloat(timelineScrubber.value);
-    updateTimeDisplay('startTimeDisplay', customStartTime);
-    updateSegmentDuration();
+//     customStartTime = parseFloat(timelineScrubber.value);
+//     updateTimeDisplay('startTimeDisplay', customStartTime);
+//     updateSegmentDuration();
 
-    console.log('Start time set to:', customStartTime);
-}
+//     console.log('Start time set to:', customStartTime);
+// }
 
 // Set end time for custom video segment
-function setEndTime() {
-    const timelineScrubber = document.getElementById('timelineScrubber');
-    if (!timelineScrubber) return;
+// function setEndTime() {
+//     const timelineScrubber = document.getElementById('timelineScrubber');
+//     if (!timelineScrubber) return;
 
-    customEndTime = parseFloat(timelineScrubber.value);
+//     customEndTime = parseFloat(timelineScrubber.value);
 
-    // Ensure end time is after start time
-    if (customEndTime <= customStartTime) {
-        customEndTime = customStartTime + 5; // Default 5 second segment
-    }
+//     // Ensure end time is after start time
+//     if (customEndTime <= customStartTime) {
+//         customEndTime = customStartTime + 5; // Default 5 second segment
+//     }
 
-    updateTimeDisplay('endTimeDisplay', customEndTime);
-    updateSegmentDuration();
+//     updateTimeDisplay('endTimeDisplay', customEndTime);
+//     updateSegmentDuration();
 
-    console.log('End time set to:', customEndTime);
-}
+//     console.log('End time set to:', customEndTime);
+// }
 
 // Update segment duration display
-function updateSegmentDuration() {
-    const durationElement = document.getElementById('segmentDuration');
-    if (!durationElement) return;
+// function updateSegmentDuration() {
+//     const durationElement = document.getElementById('segmentDuration');
+//     if (!durationElement) return;
 
-    const duration = Math.max(0, customEndTime - customStartTime);
-    durationElement.textContent = `${duration.toFixed(1)}s`;
-}
+//     const duration = Math.max(0, customEndTime - customStartTime);
+//     durationElement.textContent = `${duration.toFixed(1)}s`;
+// }
 
 // Create custom video slide
-function createVideoSlide() {
-    try {
-        if (customEndTime <= customStartTime) {
-            alert('Please set both start and end times, with end time after start time.');
-            return;
-        }
+// function createVideoSlide() {
+//     try {
+//         if (customEndTime <= customStartTime) {
+//             alert('Please set both start and end times, with end time after start time.');
+//             return;
+//         }
 
-        if (customEndTime - customStartTime < 1) {
-            alert('Video segment must be at least 1 second long.');
-            return;
-        }
+//         if (customEndTime - customStartTime < 1) {
+//             alert('Video segment must be at least 1 second long.');
+//             return;
+//         }
 
-        // Create video segment object
-        const customSegment = {
-            type: 'video',
-            startTime: customStartTime,
-            endTime: customEndTime,
-            duration: customEndTime - customStartTime,
-            title: `Custom Video ${slides.length + 1}`,
-            originalSegment: `custom-${customStartTime}s-${customEndTime}s`,
-            campaignName: 'Custom'
-        };
+//         // Create video segment object
+//         const customSegment = {
+//             type: 'video',
+//             startTime: customStartTime,
+//             endTime: customEndTime,
+//             duration: customEndTime - customStartTime,
+//             title: `Custom Video ${slides.length + 1}`,
+//             originalSegment: `custom-${customStartTime}s-${customEndTime}s`,
+//             campaignName: 'Custom'
+//         };
 
-        console.log('Creating custom video slide:', customSegment);
+//         console.log('Creating custom video slide:', customSegment);
 
-        // Create slide
-        const slideIndex = slides.length;
-        createSlideFromSegment(customSegment, slideIndex);
+//         // Create slide
+//         const slideIndex = slides.length;
+//         createSlideFromSegment(customSegment, slideIndex);
 
-        // Update UI
-        updateSlideList();
-        updateNavigation();
+//         // Update UI
+//         updateSlideList();
+//         updateNavigation();
 
-        // Switch to new slide
-        currentSlideIndex = slides.length - 1;
-        showSlide(currentSlideIndex);
+//         // Switch to new slide
+//         currentSlideIndex = slides.length - 1;
+//         showSlide(currentSlideIndex);
 
-        // Reset times for next creation
-        customStartTime = 0;
-        customEndTime = 0;
-        updateTimeDisplay('startTimeDisplay', 0);
-        updateTimeDisplay('endTimeDisplay', 0);
-        updateSegmentDuration();
+//         // Reset times for next creation
+//         customStartTime = 0;
+//         customEndTime = 0;
+//         updateTimeDisplay('startTimeDisplay', 0);
+//         updateTimeDisplay('endTimeDisplay', 0);
+//         updateSegmentDuration();
 
-        alert('Video slide created successfully!');
+//         alert('Video slide created successfully!');
 
-    } catch (error) {
-        console.error('Error creating video slide:', error);
-        alert('Error creating video slide. Please try again.');
-    }
-}
+//     } catch (error) {
+//         console.error('Error creating video slide:', error);
+//         alert('Error creating video slide. Please try again.');
+//     }
+// }
 
 // Create custom image slide
-function createImageSlide() {
-    try {
-        const timelineScrubber = document.getElementById('timelineScrubber');
-        if (!timelineScrubber) return;
+// function createImageSlide() {
+//     try {
+//         const timelineScrubber = document.getElementById('timelineScrubber');
+//         if (!timelineScrubber) return;
 
-        const currentTime = parseFloat(timelineScrubber.value);
+//         const currentTime = parseFloat(timelineScrubber.value);
 
-        // Create image segment object
-        const customSegment = {
-            type: 'image',
-            time: currentTime,
-            title: `Custom Image ${slides.length + 1}`,
-            originalSegment: `custom-img-${currentTime}s`,
-            campaignName: 'Custom'
-        };
+//         // Create image segment object
+//         const customSegment = {
+//             type: 'image',
+//             time: currentTime,
+//             title: `Custom Image ${slides.length + 1}`,
+//             originalSegment: `custom-img-${currentTime}s`,
+//             campaignName: 'Custom'
+//         };
 
-        console.log('Creating custom image slide:', customSegment);
+//         console.log('Creating custom image slide:', customSegment);
 
-        // Create slide
-        const slideIndex = slides.length;
-        createSlideFromSegment(customSegment, slideIndex);
+//         // Create slide
+//         const slideIndex = slides.length;
+//         createSlideFromSegment(customSegment, slideIndex);
 
-        // Update UI
-        updateSlideList();
-        updateNavigation();
+//         // Update UI
+//         updateSlideList();
+//         updateNavigation();
 
-        // Switch to new slide
-        currentSlideIndex = slides.length - 1;
-        showSlide(currentSlideIndex);
+//         // Switch to new slide
+//         currentSlideIndex = slides.length - 1;
+//         showSlide(currentSlideIndex);
 
-        alert('Image slide created successfully!');
+//         alert('Image slide created successfully!');
 
-    } catch (error) {
-        console.error('Error creating image slide:', error);
-        alert('Error creating image slide. Please try again.');
-    }
-}
+//     } catch (error) {
+//         console.error('Error creating image slide:', error);
+//         alert('Error creating image slide. Please try again.');
+//     }
+// }
 // Make retry function globally accessible so HTML onclick can find it
 window.retrySafariImageCapture = retrySafariImageCapture;

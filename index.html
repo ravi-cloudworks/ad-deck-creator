@@ -126,6 +126,14 @@
                         <div class="touch-color-dot" id="custom-color-5" style="background: #73c0de" onclick="openTouchColorPicker(4)"></div>
                     </div>
                 </div>
+                <div class="control-section">
+                    <label class="control-label">Slide Actions:</label>
+                    <div class="slide-controls">
+                        <button class="slide-btn secondary" onclick="deleteCurrentSlide()">
+                            🗑️ Delete Current Slide
+                        </button>
+                    </div>
+                </div>
             </div>
             
             <!-- Video/Image Controls Tab -->
@@ -207,7 +215,7 @@
                                 <div class="image-frame-time">
                                     <label>Frame Time:</label>
                                     <div class="time-display" id="editImageFrameTimeDisplay">0:00</div>
-                                    <button class="time-set-btn" onclick="setEditImageFrameTime()">🖼️ Set Frame Time</button>
+                                    <!-- <button class="time-set-btn" onclick="setEditImageFrameTime()">🖼️ Set Frame Time</button> -->
                                 </div>
                             </div>
                             
@@ -226,96 +234,14 @@
                     </div>
                 </div>
                 
-                <!-- Create New Video Slide Accordion -->
+     
+               
                 <div class="control-section">
-                    <div class="accordion-header" onclick="toggleAccordion('createVideoAccordion')">
-                        <span class="accordion-title">➕ Create New Video Slide</span>
-                        <span class="accordion-arrow" id="createVideoAccordionArrow">▼</span>
-                    </div>
-                    
-                    <div class="accordion-content" id="createVideoAccordion">
-                        <!-- Video Timeline Preview -->
-                        <div class="video-timeline-section">
-                            <div class="timeline-preview">
-                                <video id="timelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
-                                <div class="timeline-info">
-                                    <span id="currentTimeDisplay">0:00</span> / <span id="totalTimeDisplay">0:00</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Main Timeline Scrubber -->
-                            <div class="timeline-scrubber">
-                                <input type="range" id="timelineScrubber" min="0" max="100" value="0" class="timeline-slider">
-                            </div>
-                        </div>
-                        
-                        <!-- Video Segment Controls -->
-                        <div class="segment-controls">
-                            <div class="segment-time-inputs">
-                                <div class="time-input-group">
-                                    <label>Start Time:</label>
-                                    <div class="time-display" id="startTimeDisplay">0:00</div>
-                                    <button class="time-set-btn" onclick="setStartTime()">📍 Set Start</button>
-                                </div>
-                                <div class="time-input-group">
-                                    <label>End Time:</label>
-                                    <div class="time-display" id="endTimeDisplay">0:00</div>
-                                    <button class="time-set-btn" onclick="setEndTime()">🏁 Set End</button>
-                                </div>
-                            </div>
-                            
-                            <div class="segment-duration">
-                                Duration: <span id="segmentDuration">0s</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Action Button -->
-                        <div class="video-action-buttons">
-                            <button class="video-action-btn primary" onclick="createVideoSlide()">
-                                ➕ Create Video Slide
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Create New Image Slide Accordion -->
-                <div class="control-section">
-                    <div class="accordion-header" onclick="toggleAccordion('createImageAccordion')">
-                        <span class="accordion-title">🖼️ Create New Image Slide</span>
-                        <span class="accordion-arrow" id="createImageAccordionArrow">▼</span>
-                    </div>
-                    
-                    <div class="accordion-content" id="createImageAccordion">
-                        <!-- Video Timeline Preview -->
-                        <div class="video-timeline-section">
-                            <div class="timeline-preview">
-                                <video id="imageTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
-                                <div class="timeline-info">
-                                    <span id="imageCurrentTimeDisplay">0:00</span> / <span id="imageTotalTimeDisplay">0:00</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Timeline Scrubber -->
-                            <div class="timeline-scrubber">
-                                <input type="range" id="imageTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
-                            </div>
-                        </div>
-                        
-                        <!-- Image Frame Controls -->
-                        <div class="segment-controls">
-                            <div class="image-frame-time">
-                                <label>Frame Time:</label>
-                                <div class="time-display" id="imageFrameTimeDisplay">0:00</div>
-                                <button class="time-set-btn" onclick="setImageFrameTime()">🖼️ Set Frame Time</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Action Button -->
-                        <div class="video-action-buttons">
-                            <button class="video-action-btn secondary" onclick="createImageSlide()">
-                                🖼️ Create Image Slide
-                            </button>
-                        </div>
+                    <label class="control-label">Slide Actions:</label>
+                    <div class="slide-controls">
+                        <button class="slide-btn secondary" onclick="deleteCurrentSlide()">
+                            🗑️ Delete Current Slide
+                        </button>
                     </div>
                 </div>
             </div>
@@ -352,11 +278,14 @@
                 <div class="control-section">
                     <label class="control-label">Slides:</label>
                     <div class="slide-controls">
-                        <button class="slide-btn" onclick="addSlide()">
-                            ➕ Add Slide
+                        <button class="slide-btn" onclick="addChartSlide()">
+                            📊 Add Chart Slide
                         </button>
-                        <button class="slide-btn secondary" onclick="deleteSlide()">
-                            🗑️ Delete Current
+                        <button class="slide-btn" onclick="addVideoSlide()">
+                            🎬 Add Video Slide
+                        </button>
+                        <button class="slide-btn" onclick="addImageSlide()">
+                            🖼️ Add Image Slide
                         </button>
                     </div>
                     <div class="slide-counter-big">
@@ -366,6 +295,7 @@
                         <!-- Slide thumbnails will be generated here -->
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

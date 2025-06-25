@@ -309,10 +309,10 @@ function openTextColorPicker() {
     }
 }
 
-function addSlide() {
+function addChartSlide() {
     try {
-        console.log('\n➕ STARTING addSlide()');
-        debugSlideState('BEFORE adding slide');
+        console.log('\n➕ STARTING addChartSlide()');
+        debugSlideState('BEFORE adding chart slide');
         
         const slideId = `slide-${Date.now()}`;
         const slide = {
@@ -320,9 +320,9 @@ function addSlide() {
             chartType: 'bar',
             theme: 'custom',
             backgroundImage: globalBackgroundImage,
-            title: `Slide ${slides.length + 1}`,
+            title: `Chart Slide ${slides.length + 1}`,
             customTextColor: null,
-            colors: [...themeColors.custom] // Per-slide colors
+            colors: [...themeColors.custom]
         };
         
         // Find if there's a back cover slide
@@ -369,7 +369,7 @@ function addSlide() {
             // Insert at the correct DOM position
             if (backCoverIndex !== -1) {
                 // Insert before back cover slide in DOM
-                const backCoverElement = document.getElementById(slides[backCoverIndex + 1].id); // +1 because we already inserted
+                const backCoverElement = document.getElementById(slides[backCoverIndex + 1].id);
                 slideContainer.insertBefore(slideElement, backCoverElement);
             } else {
                 // Add at end
@@ -384,7 +384,7 @@ function addSlide() {
             
             // Use setTimeout to ensure DOM is updated
             setTimeout(() => {
-                console.log('📊 Calling showSlide from addSlide');
+                console.log('📊 Calling showSlide from addChartSlide');
                 showSlide(currentSlideIndex);
                 updateSlideList();
                 updateNavigation();
@@ -402,11 +402,115 @@ function addSlide() {
             }
         }
         
-        console.log('✅ COMPLETED addSlide()');
+        console.log('✅ COMPLETED addChartSlide()');
         
     } catch (error) {
-        console.error('❌ Error in addSlide:', error);
+        console.error('❌ Error in addChartSlide:', error);
     }
+}
+
+function addVideoSlide() {
+    try {
+        console.log('\n🎬 STARTING addVideoSlide()');
+        
+        // Check if video is loaded
+        if (!masterVideoElement || !masterVideoElement.duration) {
+            alert('Please load a video first to create video slides.');
+            return;
+        }
+        
+        // Create default video segment (first 5 seconds)
+        const defaultSegment = {
+            type: 'video',
+            startTime: 0,
+            endTime: Math.min(5, masterVideoElement.duration),
+            duration: Math.min(5, masterVideoElement.duration),
+            title: `Custom Video ${slides.length + 1}`,
+            originalSegment: `custom-0s-${Math.min(5, masterVideoElement.duration)}s`,
+            campaignName: 'Custom'
+        };
+        
+        console.log('Creating video slide with default segment:', defaultSegment);
+        
+        // Find insertion position (before back cover if exists)
+        const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
+        let insertIndex = backCoverIndex !== -1 ? backCoverIndex : slides.length;
+        
+        // Create the slide using existing function
+        createSlideFromSegmentFixed(defaultSegment, insertIndex);
+        
+        // Update UI
+        updateSlideList();
+        updateNavigation();
+        
+        // Switch to new slide
+        currentSlideIndex = insertIndex;
+        showSlide(currentSlideIndex);
+        
+        // Switch to customize mode and video tab
+        setTimeout(() => {
+            toggleCustomizeMode(); // Open customize panel
+            switchTab('video'); // Switch to video tab
+        }, 200);
+        
+        console.log('✅ Video slide created and customize panel opened');
+        
+    } catch (error) {
+        console.error('❌ Error in addVideoSlide:', error);
+    }
+}
+
+function addImageSlide() {
+    try {
+        console.log('\n🖼️ STARTING addImageSlide()');
+        
+        // Check if video is loaded
+        if (!masterVideoElement || !masterVideoElement.duration) {
+            alert('Please load a video first to create image slides.');
+            return;
+        }
+        
+        // Create default image segment (at 0 seconds)
+        const defaultSegment = {
+            type: 'image',
+            time: 0,
+            title: `Custom Image ${slides.length + 1}`,
+            originalSegment: `custom-img-0s`,
+            campaignName: 'Custom'
+        };
+        
+        console.log('Creating image slide with default segment:', defaultSegment);
+        
+        // Find insertion position (before back cover if exists)
+        const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
+        let insertIndex = backCoverIndex !== -1 ? backCoverIndex : slides.length;
+        
+        // Create the slide using existing function
+        createSlideFromSegmentFixed(defaultSegment, insertIndex);
+        
+        // Update UI
+        updateSlideList();
+        updateNavigation();
+        
+        // Switch to new slide
+        currentSlideIndex = insertIndex;
+        showSlide(currentSlideIndex);
+        
+        // Switch to customize mode and video tab
+        setTimeout(() => {
+            toggleCustomizeMode(); // Open customize panel
+            switchTab('video'); // Switch to video tab
+        }, 200);
+        
+        console.log('✅ Image slide created and customize panel opened');
+        
+    } catch (error) {
+        console.error('❌ Error in addImageSlide:', error);
+    }
+}
+
+function addSlide() {
+    addChartSlide();
 }
 
 function debugSlideState(location) {
