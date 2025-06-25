@@ -1,0 +1,557 @@
+.timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+    border: 3px solid white;
+}
+
+.timeline-slider::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+}/* Video Slides Styles for Brand Strategy Presentation Tool */
+/* Optimized for iPad Safari and 50+ year old users */
+
+/* Video Slide Container */
+.video-slide {
+    position: relative;
+}
+
+.video-container,
+.image-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border-radius: 20px;
+    padding: 40px;
+    margin: 20px 0;
+}
+
+/* Video/Image Placeholder */
+.video-placeholder,
+.image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    max-width: 800px;
+    height: 60vh;
+    max-height: 500px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 3px dashed #dee2e6;
+    border-radius: 16px;
+    font-size: 48px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.video-placeholder:hover,
+.image-placeholder:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border-color: #667eea;
+    transform: scale(1.02);
+}
+
+.video-details,
+.image-details {
+    font-size: 18px;
+    color: #868e96;
+    margin-top: 15px;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Video Player Styles (clean, no controls) */
+.video-player {
+    width: 80%;
+    max-width: 800px;
+    height: 60vh;
+    max-height: 500px;
+    border-radius: 16px;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.video-player video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 16px;
+    background: #000;
+}
+
+/* Image Frame Display */
+.image-frame {
+    width: 80%;
+    max-width: 800px;
+    height: 60vh;
+    max-height: 500px;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.image-frame canvas {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 16px;
+}
+
+/* Video Slide Title Styling */
+.video-slide .slide-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design for iPad */
+@media (max-width: 1024px) {
+    .video-container,
+    .image-container {
+        padding: 25px;
+        margin: 15px 0;
+    }
+    
+    .video-placeholder,
+    .image-placeholder {
+        min-height: 350px;
+        font-size: 42px;
+    }
+    
+    .video-details,
+    .image-details {
+        font-size: 16px;
+    }
+    
+    .video-timing,
+    .image-timing {
+        font-size: 16px;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .video-container,
+    .image-container {
+        padding: 20px;
+        margin: 10px 0;
+    }
+    
+    .video-placeholder,
+    .image-placeholder {
+        min-height: 300px;
+        font-size: 36px;
+    }
+    
+    .video-info,
+    .image-info {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .video-slide .slide-title {
+        font-size: 28px;
+    }
+}
+
+/* Print Mode Adjustments */
+.print-mode .video-container,
+.print-mode .image-container {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.print-mode .video-placeholder,
+.print-mode .image-placeholder {
+    border-style: solid;
+    border-width: 2px;
+}
+
+/* Loading States */
+.video-loading {
+    position: relative;
+}
+
+.video-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: video-spinner 1s linear infinite;
+}
+
+@keyframes video-spinner {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Error States */
+.video-error {
+    background: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.video-error .video-details,
+.video-error .image-details {
+    color: #dc3545;
+}
+
+/* Success States */
+.video-ready {
+    background: rgba(40, 167, 69, 0.1);
+    border-color: #28a745;
+}
+
+/* High Contrast Mode for Accessibility */
+@media (prefers-contrast: high) {
+    .video-container,
+    .image-container {
+        background: white;
+        border: 2px solid #000;
+    }
+    
+    .video-placeholder,
+    .image-placeholder {
+        background: #f8f9fa;
+        border-color: #000;
+        color: #000;
+    }
+    
+    .video-timing,
+    .image-timing {
+        background: #000;
+        color: white;
+    }
+}
+
+/* Large Text Mode */
+@media (prefers-reduced-motion: reduce) {
+    .video-placeholder,
+    .image-placeholder {
+        transition: none;
+    }
+    
+    .video-placeholder:hover,
+    .image-placeholder:hover {
+        transform: none;
+    }
+}
+
+/* Tab Navigation - iPad Optimized */
+.tab-navigation {
+    display: flex;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 12px;
+    padding: 8px;
+    margin: 20px 25px;
+    gap: 8px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 12px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn.active {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.tab-btn:not(.active):active {
+    background: rgba(102, 126, 234, 0.2);
+    transform: scale(0.98);
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Safari Play Button Styles */
+.safari-play-btn {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.safari-play-btn:hover,
+.safari-play-btn:active {
+    background: rgba(0, 0, 0, 0.9) !important;
+    transform: translate(-50%, -50%) scale(0.95) !important;
+}
+
+/* Video Timeline Controls - iPad Optimized */
+.video-timeline-section {
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.timeline-preview {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.timeline-preview video {
+    border: 2px solid #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    max-height: 80px; /* Much smaller - reduced from 120px */
+    width: auto;
+}
+
+.timeline-info {
+    margin-top: 8px;
+    font-size: 16px; /* Smaller font */
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+}
+
+/* Timeline Scrubber - Large for iPad */
+.timeline-scrubber {
+    position: relative;
+    margin: 20px 0;
+}
+
+.timeline-slider {
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+    border: 3px solid white;
+}
+
+.timeline-slider::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+}
+
+/* Timeline Markers */
+.timeline-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.timeline-marker {
+    position: absolute;
+    height: 12px;
+    border-radius: 6px;
+    opacity: 0.7;
+}
+
+.timeline-marker.video-marker {
+    background: rgba(102, 126, 234, 0.6);
+    border: 1px solid #667eea;
+}
+
+.timeline-marker.image-marker {
+    width: 3px;
+    background: #28a745;
+    border-radius: 2px;
+}
+
+/* Segment Controls - Touch Friendly */
+.segment-controls {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.segment-time-inputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.time-input-group {
+    flex: 1;
+    text-align: center;
+}
+
+.time-input-group label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.time-display {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.time-set-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 48px;
+    width: 100%;
+}
+
+.time-set-btn:active {
+    background: #5a67d8;
+    transform: scale(0.98);
+}
+
+.segment-duration {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Action Buttons - Large and Clear */
+.video-action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.video-action-btn {
+    flex: 1;
+    padding: 18px 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-action-btn.primary {
+    background: #28a745;
+    color: white;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.video-action-btn.primary:active {
+    background: #218838;
+    transform: scale(0.98);
+}
+
+.video-action-btn.secondary {
+    background: #6c757d;
+    color: white;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.video-action-btn.secondary:active {
+    background: #5a6268;
+    transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .segment-time-inputs {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .video-action-buttons {
+        flex-direction: column;
+    }
+    
+    .timeline-slider::-webkit-slider-thumb {
+        width: 40px;
+        height: 40px;
+    }
+}

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Chart Presentation Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Customize Button (floating) -->
+    <button class="customize-btn" id="customizeBtn" onclick="toggleCustomizeMode()">
+        ⚙️ Customize
+    </button>
+
+    <!-- Main Slide Container (full screen by default) -->
+    <div class="slide-container" id="slideContainer">
+        <!-- Slides will be dynamically generated here -->
+    </div>
+
+
+    <!-- Control Panel (hidden by default) -->
+    <!-- Control Panel (hidden by default) -->
+    <div class="control-panel" id="controlPanel">
+        <div class="control-header">
+            <h2>📊 Customize Presentation</h2>
+            <button class="close-btn" onclick="toggleCustomizeMode()">✕</button>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation" id="tabNavigation">
+            <button class="tab-btn active" id="chartTab" onclick="switchTab('chart')" style="display: none;">
+                📊 Chart
+            </button>
+            <button class="tab-btn" id="videoTab" onclick="switchTab('video')" style="display: none;">
+                🎬 Video
+            </button>
+            <button class="tab-btn" id="commonTab" onclick="switchTab('common')">
+                ⚙️ Common
+            </button>
+        </div>
+        
+        <div class="control-content">
+            
+            <!-- Chart Controls Tab -->
+            <div class="tab-content active" id="chartTabContent">
+                <div class="control-section">
+                    <label class="control-label">Chart Type:</label>
+                    <div class="chart-type-buttons">
+                        <button class="type-btn active" data-type="bar" onclick="selectChartType('bar')">
+                            📊 Bar Chart
+                        </button>
+                        <button class="type-btn" data-type="line" onclick="selectChartType('line')">
+                            📈 Line Chart
+                        </button>
+                        <button class="type-btn" data-type="stack" onclick="selectChartType('stack')">
+                            📚 Stacked
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Chart Data (drag to change):</label>
+                    <div class="data-controls" id="dataControls">
+                        <!-- Data sliders will be generated here -->
+                    </div>
+                    <div class="data-management">
+                        <div class="data-buttons">
+                            <button class="data-btn" onclick="addDataPoint()">➕ Add Period</button>
+                            <button class="data-btn" onclick="removeDataPoint()">➖ Remove Period</button>
+                        </div>
+                        <div class="data-buttons" id="seriesButtons" style="display: none;">
+                            <button class="data-btn" onclick="addSeries()">➕ Add Series</button>
+                            <button class="data-btn" onclick="removeSeries()">➖ Remove Series</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Chart Title:</label>
+                    <div class="title-templates">
+                        <button class="template-btn" onclick="setTitle('Monthly Sales Data')">📊 Monthly Sales</button>
+                        <button class="template-btn" onclick="setTitle('Quarterly Revenue')">💰 Quarterly Revenue</button>
+                        <button class="template-btn" onclick="setTitle('Website Traffic')">🌐 Website Traffic</button>
+                        <button class="template-btn" onclick="setTitle('Product Performance')">📈 Product Performance</button>
+                        <button class="template-btn" onclick="setTitle('Market Analysis')">📋 Market Analysis</button>
+                        <button class="template-btn" onclick="setTitle('Growth Trends')">📊 Growth Trends</button>
+                    </div>
+                    <div class="voice-input-section">
+                        <button class="voice-btn" onclick="startVoiceInput('title')">🎤 Voice Input</button>
+                        <span class="voice-status" id="titleVoiceStatus"></span>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Data Labels:</label>
+                    <div class="label-templates">
+                        <div class="label-group">
+                            <label class="small-label">Series Names:</label>
+                            <div class="template-buttons">
+                                <button class="template-btn" onclick="setSeriesLabels(['Sales', 'Revenue', 'Profit'])">💰 Sales/Revenue/Profit</button>
+                                <button class="template-btn" onclick="setSeriesLabels(['Visitors', 'Page Views', 'Conversions'])">🌐 Web Analytics</button>
+                                <button class="template-btn" onclick="setSeriesLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📅 Quarterly</button>
+                            </div>
+                        </div>
+                        <div class="label-group">
+                            <label class="small-label">Time Periods:</label>
+                            <div class="template-buttons">
+                                <button class="template-btn" onclick="setTimeLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])">📅 Months</button>
+                                <button class="template-btn" onclick="setTimeLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📊 Quarters</button>
+                                <button class="template-btn" onclick="setTimeLabels(['Week 1', 'Week 2', 'Week 3', 'Week 4'])">📆 Weeks</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Chart Colors (tap to change):</label>
+                    <div class="color-palette-touch">
+                        <div class="touch-color-dot" id="custom-color-1" style="background: #5470c6" onclick="openTouchColorPicker(0)"></div>
+                        <div class="touch-color-dot" id="custom-color-2" style="background: #91cc75" onclick="openTouchColorPicker(1)"></div>
+                        <div class="touch-color-dot" id="custom-color-3" style="background: #fac858" onclick="openTouchColorPicker(2)"></div>
+                        <div class="touch-color-dot" id="custom-color-4" style="background: #ee6666" onclick="openTouchColorPicker(3)"></div>
+                        <div class="touch-color-dot" id="custom-color-5" style="background: #73c0de" onclick="openTouchColorPicker(4)"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Video/Image Controls Tab -->
+            <div class="tab-content" id="videoTabContent">
+                
+                <!-- Edit Current Slide Section (Always Visible) -->
+                <div class="control-section">
+                    <label class="control-label">✏️ Edit Current Slide</label>
+                    
+                    <div class="edit-content">
+                        <!-- Edit Current Video Slide Section -->
+                        <div class="accordion-subsection" id="editCurrentVideoSection" style="display: none;">
+                            <label class="subsection-label">📹 Edit Video Slide</label>
+                            
+                            <!-- Video Timeline Preview -->
+                            <div class="video-timeline-section">
+                                <div class="timeline-preview">
+                                    <video id="editTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                    <div class="timeline-info">
+                                        <span id="editCurrentTimeDisplay">0:00</span> / <span id="editTotalTimeDisplay">0:00</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Timeline Scrubber -->
+                                <div class="timeline-scrubber">
+                                    <input type="range" id="editTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                                </div>
+                            </div>
+                            
+                            <!-- Edit Segment Controls -->
+                            <div class="segment-controls">
+                                <div class="segment-time-inputs">
+                                    <div class="time-input-group">
+                                        <label>Start Time:</label>
+                                        <div class="time-display" id="editStartTimeDisplay">0:00</div>
+                                        <button class="time-set-btn" onclick="setEditStartTime()">📍 Set Start</button>
+                                    </div>
+                                    <div class="time-input-group">
+                                        <label>End Time:</label>
+                                        <div class="time-display" id="editEndTimeDisplay">0:00</div>
+                                        <button class="time-set-btn" onclick="setEditEndTime()">🏁 Set End</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="segment-duration">
+                                    Duration: <span id="editSegmentDuration">0s</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Update Button -->
+                            <div class="video-action-buttons">
+                                <button class="video-action-btn primary" onclick="updateVideoSlide()">
+                                    ✏️ Update Video Slide
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Current Image Slide Section -->
+                        <div class="accordion-subsection" id="editCurrentImageSection" style="display: none;">
+                            <label class="subsection-label">🖼️ Edit Image Slide</label>
+                            
+                            <!-- Video Timeline Preview -->
+                            <div class="video-timeline-section">
+                                <div class="timeline-preview">
+                                    <video id="editImageTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                    <div class="timeline-info">
+                                        <span id="editImageCurrentTimeDisplay">0:00</span> / <span id="editImageTotalTimeDisplay">0:00</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Timeline Scrubber -->
+                                <div class="timeline-scrubber">
+                                    <input type="range" id="editImageTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                                </div>
+                            </div>
+                            
+                            <!-- Image Frame Controls -->
+                            <div class="segment-controls">
+                                <div class="image-frame-time">
+                                    <label>Frame Time:</label>
+                                    <div class="time-display" id="editImageFrameTimeDisplay">0:00</div>
+                                    <button class="time-set-btn" onclick="setEditImageFrameTime()">🖼️ Set Frame Time</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Update Button -->
+                            <div class="video-action-buttons">
+                                <button class="video-action-btn primary" onclick="updateImageSlide()">
+                                    ✏️ Update Image Slide
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- No Slide Selected Message -->
+                        <div class="no-slide-message" id="noSlideSelected">
+                            <p>📋 Select a video or image slide to edit its timing</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Create New Video Slide Accordion -->
+                <div class="control-section">
+                    <div class="accordion-header" onclick="toggleAccordion('createVideoAccordion')">
+                        <span class="accordion-title">➕ Create New Video Slide</span>
+                        <span class="accordion-arrow" id="createVideoAccordionArrow">▼</span>
+                    </div>
+                    
+                    <div class="accordion-content" id="createVideoAccordion">
+                        <!-- Video Timeline Preview -->
+                        <div class="video-timeline-section">
+                            <div class="timeline-preview">
+                                <video id="timelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                <div class="timeline-info">
+                                    <span id="currentTimeDisplay">0:00</span> / <span id="totalTimeDisplay">0:00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Timeline Scrubber -->
+                            <div class="timeline-scrubber">
+                                <input type="range" id="timelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                            </div>
+                        </div>
+                        
+                        <!-- Video Segment Controls -->
+                        <div class="segment-controls">
+                            <div class="segment-time-inputs">
+                                <div class="time-input-group">
+                                    <label>Start Time:</label>
+                                    <div class="time-display" id="startTimeDisplay">0:00</div>
+                                    <button class="time-set-btn" onclick="setStartTime()">📍 Set Start</button>
+                                </div>
+                                <div class="time-input-group">
+                                    <label>End Time:</label>
+                                    <div class="time-display" id="endTimeDisplay">0:00</div>
+                                    <button class="time-set-btn" onclick="setEndTime()">🏁 Set End</button>
+                                </div>
+                            </div>
+                            
+                            <div class="segment-duration">
+                                Duration: <span id="segmentDuration">0s</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <div class="video-action-buttons">
+                            <button class="video-action-btn primary" onclick="createVideoSlide()">
+                                ➕ Create Video Slide
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Create New Image Slide Accordion -->
+                <div class="control-section">
+                    <div class="accordion-header" onclick="toggleAccordion('createImageAccordion')">
+                        <span class="accordion-title">🖼️ Create New Image Slide</span>
+                        <span class="accordion-arrow" id="createImageAccordionArrow">▼</span>
+                    </div>
+                    
+                    <div class="accordion-content" id="createImageAccordion">
+                        <!-- Video Timeline Preview -->
+                        <div class="video-timeline-section">
+                            <div class="timeline-preview">
+                                <video id="imageTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                <div class="timeline-info">
+                                    <span id="imageCurrentTimeDisplay">0:00</span> / <span id="imageTotalTimeDisplay">0:00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Timeline Scrubber -->
+                            <div class="timeline-scrubber">
+                                <input type="range" id="imageTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                            </div>
+                        </div>
+                        
+                        <!-- Image Frame Controls -->
+                        <div class="segment-controls">
+                            <div class="image-frame-time">
+                                <label>Frame Time:</label>
+                                <div class="time-display" id="imageFrameTimeDisplay">0:00</div>
+                                <button class="time-set-btn" onclick="setImageFrameTime()">🖼️ Set Frame Time</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Button -->
+                        <div class="video-action-buttons">
+                            <button class="video-action-btn secondary" onclick="createImageSlide()">
+                                🖼️ Create Image Slide
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Common Controls Tab -->
+            <div class="tab-content" id="commonTabContent">
+                <div class="control-section">
+                    <label class="control-label">Text Color:</label>
+                    <div class="text-color-section">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoTextColor" checked onchange="updateChart()">
+                            <span class="slider"></span>
+                            <span class="toggle-label">Auto-detect</span>
+                        </label>
+                        <button class="manual-text-color" id="manualTextBtn" onclick="openTextColorPicker()" disabled>
+                            🎨 Manual Color
+                        </button>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Background Image:</label>
+                    <div class="bg-controls">
+                        <button class="bg-btn" onclick="document.getElementById('bgUpload').click()">
+                            📁 Upload Image
+                        </button>
+                        <button class="bg-btn secondary" onclick="removeBackground()">
+                            🗑️ Remove
+                        </button>
+                    </div>
+                    <input type="file" id="bgUpload" accept="image/*" style="display: none;">
+                </div>
+
+                <div class="control-section">
+                    <label class="control-label">Slides:</label>
+                    <div class="slide-controls">
+                        <button class="slide-btn" onclick="addSlide()">
+                            ➕ Add Slide
+                        </button>
+                        <button class="slide-btn secondary" onclick="deleteSlide()">
+                            🗑️ Delete Current
+                        </button>
+                    </div>
+                    <div class="slide-counter-big">
+                        Slide <span id="currentSlide">1</span> of <span id="totalSlides">1</span>
+                    </div>
+                    <div class="slide-thumbnails" id="slideList">
+                        <!-- Slide thumbnails will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation (always visible) -->
+    <div class="navigation-touch">
+        <button class="nav-btn-touch" id="prevBtn" onclick="previousSlide()">‹</button>
+        <button class="nav-btn-touch" id="nextBtn" onclick="nextSlide()">›</button>
+    </div>
+
+    <!-- Color Picker Modal for Touch -->
+    <div class="color-picker-modal" id="colorPickerModal" style="display: none;">
+        <div class="color-picker-content">
+            <h3>Choose Color</h3>
+            <div class="color-preset-grid">
+                <!-- Preset colors for touch - Better organized for iPad -->
+                <div class="preset-color" style="background: #FF6B6B" onclick="selectPresetColor('#FF6B6B')"></div>
+                <div class="preset-color" style="background: #4ECDC4" onclick="selectPresetColor('#4ECDC4')"></div>
+                <div class="preset-color" style="background: #45B7D1" onclick="selectPresetColor('#45B7D1')"></div>
+                <div class="preset-color" style="background: #96CEB4" onclick="selectPresetColor('#96CEB4')"></div>
+                <div class="preset-color" style="background: #FFEAA7" onclick="selectPresetColor('#FFEAA7')"></div>
+                <div class="preset-color" style="background: #DDA0DD" onclick="selectPresetColor('#DDA0DD')"></div>
+                <div class="preset-color" style="background: #98D8C8" onclick="selectPresetColor('#98D8C8')"></div>
+                <div class="preset-color" style="background: #F7DC6F" onclick="selectPresetColor('#F7DC6F')"></div>
+                <div class="preset-color" style="background: #BB8FCE" onclick="selectPresetColor('#BB8FCE')"></div>
+                <div class="preset-color" style="background: #333333" onclick="selectPresetColor('#333333')"></div>
+                <div class="preset-color" style="background: #FFFFFF; border: 2px solid #ddd;"
+                    onclick="selectPresetColor('#FFFFFF')"></div>
+                <div class="preset-color" style="background: #000000" onclick="selectPresetColor('#000000')"></div>
+                <!-- Additional common colors -->
+                <div class="preset-color" style="background: #FF5722" onclick="selectPresetColor('#FF5722')"></div>
+                <div class="preset-color" style="background: #9C27B0" onclick="selectPresetColor('#9C27B0')"></div>
+                <div class="preset-color" style="background: #3F51B5" onclick="selectPresetColor('#3F51B5')"></div>
+                <div class="preset-color" style="background: #2196F3" onclick="selectPresetColor('#2196F3')"></div>
+                <div class="preset-color" style="background: #00BCD4" onclick="selectPresetColor('#00BCD4')"></div>
+                <div class="preset-color" style="background: #4CAF50" onclick="selectPresetColor('#4CAF50')"></div>
+                <div class="preset-color" style="background: #8BC34A" onclick="selectPresetColor('#8BC34A')"></div>
+                <div class="preset-color" style="background: #CDDC39" onclick="selectPresetColor('#CDDC39')"></div>
+                <div class="preset-color" style="background: #FFC107" onclick="selectPresetColor('#FFC107')"></div>
+                <div class="preset-color" style="background: #FF9800" onclick="selectPresetColor('#FF9800')"></div>
+                <div class="preset-color" style="background: #795548" onclick="selectPresetColor('#795548')"></div>
+                <div class="preset-color" style="background: #607D8B" onclick="selectPresetColor('#607D8B')"></div>
+            </div>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <small style="color: #666;">Choose from the colors above - no need for the tiny picker!</small>
+            </div>
+            <input type="color" id="touchColorPicker" style="width: 100%; height: 40px; margin: 10px 0;" disabled>
+            <div class="color-picker-buttons">
+                <button onclick="applySelectedColor()">Apply</button>
+                <button onclick="closeColorPicker()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden video element for video slides -->
+    <video id="masterVideo" preload="metadata" muted playsinline style="display: none;"></video>
+
+    <script src="script.js"></script>
+    <script src="video-slides.js"></script>
+    <link rel="stylesheet" href="video-slides.css">
+</body>
+
+</html>
