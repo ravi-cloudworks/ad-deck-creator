@@ -6,6 +6,8 @@ let masterVideoElement = null;
 let videoSegments = [];
 let videoLoaded = false;
 let currentVideoUrl = null;
+let frontCoverUrl = null;
+let backCoverUrl = null;
 
 // Initialize video functionality
 function initVideoSlides() {
@@ -31,6 +33,8 @@ function initVideoSlides() {
 function checkVideoUrlParameter() {
     const urlParams = new URLSearchParams(window.location.search);
     const videoUrl = urlParams.get('video_url');
+    frontCoverUrl = urlParams.get('front_cover');
+    backCoverUrl = urlParams.get('back_cover');
     
     if (videoUrl) {
         console.log('Video URL found:', videoUrl);
@@ -294,10 +298,20 @@ function createSlidesFromSegments() {
     // Clear existing slides first (optional - for clean start)
     // clearAllSlides();
     
+    // Add front cover if present
+    if (frontCoverUrl) {
+        createCoverSlide(frontCoverUrl, true);
+    }
+    
     // Create slides for each segment
     videoSegments.forEach((segment, index) => {
         createSlideFromSegment(segment, index);
     });
+    
+    // Add back cover if present
+    if (backCoverUrl) {
+        createCoverSlide(backCoverUrl, false);
+    }
     
     // Update UI
     updateSlideList();
@@ -1854,3 +1868,48 @@ function createImageSlide() {
         alert('Error creating image slide. Please try again.');
     }
 }
+
+// New helper function:
+function createCoverSlide(imageUrl, isFront) {
+    const slideId = `cover-slide-${isFront ? 'front' : 'back'}-${Date.now()}`;
+    const slide = {
+        id: slideId,
+        chartType: 'cover',
+        theme: 'custom',
+        backgroundImage: null,
+        title: isFront ? 'Front Cover' : 'Back Cover',
+        customTextColor: null,
+        isVideoSlide: false,
+        isFrontCover: isFront,
+        isBackCover: !isFront,
+        imageUrl: imageUrl
+    };
+
+    slides.push(slide);
+
+    // Create slide element
+    const slideElement = document.createElement('div');
+    slideElement.className = 'slide cover-slide';
+    slideElement.id = slideId;
+    slideElement.innerHTML = `
+        <div class="slide-content">
+            <h2 class="slide-title">${slide.title}</h2>
+            <div class="cover-image-container">
+                <img src="${imageUrl}" alt="${slide.title}" style="max-width: 100%; max-height: 80vh; border-radius: 12px;"/>
+            </div>
+        </div>
+    `;
+
+    // Add to slide container
+    const slideContainer = document.getElementById('slideContainer');
+    if (slideContainer) {
+        slideContainer.appendChild(slideElement);
+    }
+}
+
+function getDeckSlideCountWithoutCovers() {
+    return slides.filter(slide => !slide.isFrontCover && !slide.isBackCover).length;
+}
+
+const count = getDeckSlideCountWithoutCovers();
+console.log('Slides (excluding covers):', count);
