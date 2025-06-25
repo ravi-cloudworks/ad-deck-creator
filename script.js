@@ -95,7 +95,7 @@ function init() {
                 debugSlideState('AFTER main init completion');
             }, 50);
             
-        } catch (error) {
+        } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
             console.error('❌ Error during main initialization:', error);
         }
     }, 200);
@@ -168,7 +168,7 @@ function selectChartType(type) {
             updateChart();
             generateDataSliders(); // Generate sliders for new chart type
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in selectChartType:', error);
     }
 }
@@ -190,7 +190,7 @@ function getCurrentTextColor() {
         } else {
             return slides[currentSlideIndex]?.customTextColor || '#333333';
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error getting text color:', error);
         return '#333333';
     }
@@ -207,7 +207,7 @@ function openTouchColorPicker(colorIndex) {
             colorPicker.value = themeColors.custom[colorIndex];
             modal.style.display = 'flex';
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error opening color picker:', error);
     }
 }
@@ -218,7 +218,7 @@ function selectPresetColor(color) {
         if (colorPicker) {
             colorPicker.value = color;
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error selecting preset color:', error);
     }
 }
@@ -260,7 +260,7 @@ function applySelectedColor() {
         }
         
         closeColorPicker();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error applying color:', error);
     }
 }
@@ -280,7 +280,7 @@ function closeColorPicker() {
             // Reset color picker index
             currentColorPickerIndex = -1;
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error closing color picker:', error);
     }
 }
@@ -304,7 +304,7 @@ function openTextColorPicker() {
                 modalTitle.textContent = 'Choose Text Color';
             }
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error opening text color picker:', error);
     }
 }
@@ -404,7 +404,7 @@ function addChartSlide() {
         
         console.log('✅ COMPLETED addChartSlide()');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addChartSlide:', error);
     }
 }
@@ -455,7 +455,7 @@ function addVideoSlide() {
         
         console.log('✅ Video slide created and customize panel opened');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addVideoSlide:', error);
     }
 }
@@ -504,7 +504,7 @@ function addImageSlide() {
         
         console.log('✅ Image slide created and customize panel opened');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addImageSlide:', error);
     }
 }
@@ -563,7 +563,7 @@ function deleteSlide() {
         showSlide(currentSlideIndex);
         updateSlideList();
         updateNavigation();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in deleteSlide:', error);
     }
 }
@@ -654,7 +654,7 @@ function showSlide(index) {
         // Update chart and generate sliders
         updateChart();
         generateDataSliders();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in showSlide:', error);
     }
 }
@@ -673,7 +673,7 @@ function updateColorDots(colors) {
             }
         }
         console.log('Color dots updated successfully');
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating color dots:', error);
     }
 }
@@ -858,7 +858,7 @@ function updateChart() {
         if (isCustomizeMode) {
             setTimeout(() => chartInstance.resize(), 100);
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in updateChart:', error);
     }
 }
@@ -869,7 +869,7 @@ function handleBackgroundUpload(event) {
         if (file && file.type.startsWith('image/')) {
             handleBackgroundFile(file);
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error handling background upload:', error);
     }
 }
@@ -902,7 +902,7 @@ function handleBackgroundFile(file) {
             updateChart();
         };
         reader.readAsDataURL(file);
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error handling background file:', error);
     }
 }
@@ -927,7 +927,7 @@ function removeBackground() {
         
         updateSlideList();
         updateChart();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing background:', error);
     }
 }
@@ -957,7 +957,7 @@ function updateNavigation() {
         
         if (prevBtn) prevBtn.disabled = currentSlideIndex === 0;
         if (nextBtn) nextBtn.disabled = currentSlideIndex === slides.length - 1;
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating navigation:', error);
     }
 }
@@ -1014,7 +1014,7 @@ function updateSlideList() {
             
             slideList.appendChild(slidePreview);
         });
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating slide list:', error);
     }
 }
@@ -1035,7 +1035,7 @@ function setupDragAndDrop() {
                 handleBackgroundFile(files[0]);
             }
         });
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting up drag and drop:', error);
     }
 }
@@ -1183,7 +1183,7 @@ function addDataPoint() {
         
         updateChart();
         generateDataSliders();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error adding data point:', error);
     }
 }
@@ -1214,7 +1214,7 @@ function removeDataPoint() {
         
         // ADD THIS: Update button states
         updateDataManagementButtons();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing data point:', error);
     }
 }
@@ -1262,7 +1262,7 @@ function addSeries() {
         updateChart();
         generateDataSliders();
         updateDataManagementButtons();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error adding series:', error);
     }
 }
@@ -1288,7 +1288,7 @@ function removeSeries() {
         updateChart();
         generateDataSliders();
         updateDataManagementButtons();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing series:', error);
     }
 }
@@ -1325,7 +1325,7 @@ function updateDataManagementButtons() {
             }
         }
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating data management buttons:', error);
     }
 }
@@ -1352,7 +1352,7 @@ function updateDataValue(chartType, seriesIndex, dataIndex, newValue) {
         
         // Update chart
         updateChart();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating data value:', error);
     }
 }
@@ -1382,7 +1382,7 @@ function setTitle(newTitle) {
         
         // Immediately update chart
         updateChart();
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting title:', error);
     }
 }
@@ -1426,7 +1426,7 @@ function setSeriesLabels(labels) {
         
         updateChart();
         generateDataSliders(); // Refresh sliders with new labels
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting series labels:', error);
     }
 }
@@ -1464,7 +1464,7 @@ function setTimeLabels(labels) {
         
         updateChart();
         generateDataSliders(); // Refresh sliders with new labels
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting time labels:', error);
     }
 }
@@ -1504,7 +1504,7 @@ function startVoiceInput(type) {
         } else {
             if (statusElement) statusElement.textContent = 'Voice input not supported';
         }
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error with voice input:', error);
     }
 }
@@ -1561,7 +1561,7 @@ function moveSlideUp(index) {
         
         console.log('✅ Moved slide up successfully');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error moving slide up:', error);
     }
 }
@@ -1595,7 +1595,7 @@ function moveSlideDown(index) {
         
         console.log('✅ Moved slide down successfully');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error moving slide down:', error);
     }
 }
@@ -1640,7 +1640,7 @@ function swapSlides(index1, index2) {
         
         console.log('✅ Slide swap completed');
         
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error swapping slides:', error);
     }
 }
@@ -1675,6 +1675,51 @@ function showConfirm(message, callback) {
     window.confirmYes = () => { modal.remove(); callback(true); };
     window.confirmNo = () => { modal.remove(); callback(false); };
 }
+// Global Error Handler for iOS WebView
+function sendErrorToiOS(error, source = 'unknown', line = 0, column = 0, stack = '') {
+    try {
+        const errorData = {
+            message: error.toString(),
+            source: source,
+            line: line,
+            column: column,
+            stack: stack,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        };
+        
+        // Send to iOS Swift via WebView message
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ioserrorlistener) {
+            window.webkit.messageHandlers.ioserrorlistener.postMessage(errorData);
+        } else {
+            console.error('iOS error handler not available:', errorData);
+        }
+    } catch (e) {
+        console.error('Failed to send error to iOS:', e);
+    }
+}
 
+// Global error event listener (catches unhandled errors)
+window.addEventListener('error', function(event) {
+    sendErrorToiOS(
+        event.error || event.message,
+        event.filename || 'unknown',
+        event.lineno || 0,
+        event.colno || 0,
+        event.error ? event.error.stack : ''
+    );
+});
+
+// Promise rejection handler (catches unhandled promise rejections)
+window.addEventListener('unhandledrejection', function(event) {
+    sendErrorToiOS(
+        event.reason,
+        'promise',
+        0,
+        0,
+        event.reason ? event.reason.stack : ''
+    );
+});
 // Initialize the application when page loads
 document.addEventListener('DOMContentLoaded', init);

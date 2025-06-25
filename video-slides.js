@@ -132,7 +132,7 @@ function loadBackgroundFromUrl(imageUrl) {
         // Start loading the image
         img.src = imageUrl;
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error loading background from URL:', error);
     }
 }
@@ -243,7 +243,7 @@ function createCoverSlide(imageUrl, title, position) {
         console.log(`✅ Created ${position} cover slide successfully`);
         debugSlideState(`AFTER creating ${position} cover`);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error(`❌ Error creating ${position} cover slide:`, error);
     }
 }
@@ -325,7 +325,7 @@ function loadVideoFromUrl(videoUrl) {
 
         console.log('✅ COMPLETED loadVideoFromUrl');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error loading video from URL:', error);
     }
 }
@@ -361,7 +361,7 @@ function parseVideoSegments(filename) {
 
         return segments;
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing video segments:', error);
         return [];
     }
@@ -410,7 +410,7 @@ function parseSegment(segmentString, index) {
             return null;
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing segment:', segmentString, error);
         return null;
     }
@@ -433,7 +433,7 @@ function parseTimeToSeconds(timeString) {
         // Simple seconds
         return parseInt(cleanTime) || 0;
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing time string:', timeString, error);
         return 0;
     }
@@ -667,7 +667,7 @@ function createSlideFromSegmentFixed(segment, index) {
 
         console.log('✅ Created slide for segment:', segment.title);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error creating slide from segment:', error);
     }
 }
@@ -708,7 +708,7 @@ function showVideoSlide(slideIndex) {
 
         return true; // Successfully handled video slide
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error showing video slide:', error);
         return false;
     }
@@ -753,7 +753,7 @@ function resetAndPlayVideo(slideId, segment) {
             });
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error resetting video:', error);
     }
 }
@@ -768,7 +768,7 @@ function seekVideoToTime(timeInSeconds) {
     try {
         masterVideoElement.currentTime = timeInSeconds;
         console.log('Seeked video to:', timeInSeconds, 'seconds');
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error seeking video:', error);
     }
 }
@@ -840,7 +840,7 @@ function showVideoPlayer(slideId, segment) {
         // Try to play immediately since video is pre-buffered
         playVideo();
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error showing video player:', error);
     }
 }
@@ -897,7 +897,7 @@ function addSafariPlayButton(container, video, segment) {
 
         console.log('Safari play button added');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error adding Safari play button:', error);
     }
 }
@@ -934,7 +934,7 @@ function playVideoSegmentAuto(slideId, segment) {
 
         playerVideo.addEventListener('timeupdate', stopPlayback);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error auto-playing video segment:', error);
     }
 }
@@ -967,7 +967,7 @@ function playVideoSegment(slideId) {
 
         console.log('Playing video segment:', segment.startTime, 'to', segment.endTime);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error playing video segment:', error);
     }
 }
@@ -1074,7 +1074,7 @@ function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
             }
         }, 3000); // Longer timeout for Safari
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error in captureVideoFrameSafari:', error);
         if (retryCount < maxRetries) {
             setTimeout(() => {
@@ -1192,7 +1192,7 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
 
         console.log(`✅ Safari: Video frame captured successfully for ${segment.title} at ${segment.time}s`);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error in performSafariFrameCapture:', error);
         if (retryCount < 3) {
             setTimeout(() => {
@@ -1228,7 +1228,7 @@ function showImageErrorSafari(slideId, errorMessage) {
 
         console.error(`Safari: Image capture failed for slide ${slideId}: ${errorMessage}`);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error showing image error:', error);
     }
 }
@@ -1260,7 +1260,7 @@ function retrySafariImageCapture(slideId) {
             captureVideoFrameSafari(slideId, slide.videoSegment, 0);
         }, 1000);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error retrying image capture:', error);
     }
 }
@@ -1280,7 +1280,7 @@ function clearAllSlides() {
 
         console.log('Cleared all slides');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error clearing slides:', error);
     }
 }
@@ -1382,7 +1382,7 @@ function extendShowSlide() {
                     updateTabsForCurrentSlide();
                 }
 
-            } catch (error) {
+            } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
                 console.error('Error in extended showSlide:', error);
                 // Fallback to original
                 window.originalShowSlide(index);
@@ -1448,7 +1448,7 @@ function switchTab(tabName) {
             }
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error switching tabs:', error);
     }
 }
@@ -1500,7 +1500,7 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating tabs:', error);
     }
 }
@@ -1534,7 +1534,7 @@ function toggleAccordion(accordionId) {
 
         console.log('Accordion toggled:', accordionId, isExpanded ? 'collapsed' : 'expanded');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error toggling accordion:', error);
     }
 }
@@ -1624,7 +1624,7 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating tabs:', error);
     }
 }
@@ -1668,7 +1668,7 @@ function setupEditVideoSection(slide) {
 
         console.log('Edit video section setup complete for:', segment.title);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error setting up edit video section:', error);
     }
 }
@@ -1710,7 +1710,7 @@ function setupEditImageSection(slide) {
 
         console.log('Edit image section setup complete for:', segment.title, 'at time:', editImageFrameTime);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error setting up edit image section:', error);
     }
 }
@@ -1736,7 +1736,7 @@ function handleEditImageTimelineChange(event) {
 
         console.log('Edit image timeline changed to:', time, 'editImageFrameTime updated to:', editImageFrameTime);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error handling edit image timeline change:', error);
     }
 }
@@ -1804,7 +1804,7 @@ function updateImageSlide() {
 
         showAlert(`Image slide updated successfully! New frame time: ${editImageFrameTime}s`);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating image slide:', error);
         showAlert('Error updating image slide. Please try again.');
     }
@@ -1826,7 +1826,7 @@ function handleEditTimelineChange(event) {
         // Update current time display
         updateTimeDisplay('editCurrentTimeDisplay', time);
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error handling edit timeline change:', error);
     }
 }
@@ -1902,7 +1902,7 @@ function updateVideoSlide() {
 
         showAlert('Video slide updated successfully!');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating video slide:', error);
         showAlert('Error updating video slide. Please try again.');
     }
@@ -2031,7 +2031,7 @@ function updateImageTimelinePreview(sliderValue) {
 
         console.log('Image timeline updated successfully');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating image timeline preview:', error);
     }
 }
@@ -2080,7 +2080,7 @@ function createImageSlide() {
 
         showAlert('Image slide created successfully!');
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error creating image slide:', error);
         showAlert('Error creating image slide. Please try again.');
     }
@@ -2139,7 +2139,7 @@ function updateCurrentSlideInfo(slide) {
             }
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating current slide info:', error);
     }
 }
@@ -2211,7 +2211,7 @@ function editCurrentSlide() {
             }
         }
 
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error editing current slide:', error);
         showAlert('Error editing slide. Please try again.');
     }
@@ -2280,7 +2280,7 @@ function deleteCurrentSlide() {
 
         console.log('✅ Slide deleted successfully');
     });
-    } catch (error) {
+    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error in deleteCurrentSlide:', error);
         showAlert('Error deleting slide. Please try again.');
     }
@@ -2491,7 +2491,7 @@ function createTimelineMarkers(videoDuration) {
 
 //         showAlert('Video slide created successfully!');
 
-//     } catch (error) {
+//     } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
 //         console.error('Error creating video slide:', error);
 //         showAlert('Error creating video slide. Please try again.');
 //     }
@@ -2530,7 +2530,7 @@ function createTimelineMarkers(videoDuration) {
 
 //         showAlert('Image slide created successfully!');
 
-//     } catch (error) {
+//     } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
 //         console.error('Error creating image slide:', error);
 //         showAlert('Error creating image slide. Please try again.');
 //     }
