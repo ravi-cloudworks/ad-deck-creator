@@ -120,7 +120,7 @@ function getCurrentSlideColors() {
 function toggleCustomizeMode() {
     // Check if current slide is a cover slide
     const currentSlide = slides[currentSlideIndex];
-    if (currentSlide && currentSlide.isCoverSlide) {
+    if (currentSlide && currentSlide.isCoverSlide && !isCustomizeMode) {
         console.log('Customize disabled for cover slides');
         return; // Don't allow customize mode for cover slides
     }
@@ -577,6 +577,11 @@ function showSlide(index) {
         const slideToShow = slides[index];
         if (customizeBtn && slideToShow) {
             if (slideToShow.isCoverSlide) {
+                // FIXED: Auto-close customize panel if open when navigating to cover slide
+                if (isCustomizeMode) {
+                    console.log('Auto-closing customize panel for cover slide');
+                    toggleCustomizeMode(); // Close the panel
+                }
                 customizeBtn.style.visibility = 'hidden';
             } else {
                 customizeBtn.style.visibility = 'visible';
@@ -1205,7 +1210,10 @@ function removeDataPoint() {
         });
         
         updateChart();
-        generateDataSliders();
+        generateDataSliders(); // This already exists - good!
+        
+        // ADD THIS: Update button states
+        updateDataManagementButtons();
     } catch (error) {
         console.error('Error removing data point:', error);
     }
@@ -1253,6 +1261,7 @@ function addSeries() {
         
         updateChart();
         generateDataSliders();
+        updateDataManagementButtons();
     } catch (error) {
         console.error('Error adding series:', error);
     }
@@ -1278,8 +1287,46 @@ function removeSeries() {
         
         updateChart();
         generateDataSliders();
+        updateDataManagementButtons();
     } catch (error) {
         console.error('Error removing series:', error);
+    }
+}
+
+function updateDataManagementButtons() {
+    try {
+        const currentSlide = slides[currentSlideIndex];
+        if (!currentSlide) return;
+        
+        const chartType = currentSlide.chartType;
+        const data = sampleData[chartType];
+        
+        // Update period buttons
+        const removeDataBtn = document.querySelector('.data-btn[onclick="removeDataPoint()"]');
+        const addDataBtn = document.querySelector('.data-btn[onclick="addDataPoint()"]');
+        
+        if (removeDataBtn) {
+            removeDataBtn.disabled = data.xAxis.length <= 2;
+        }
+        if (addDataBtn) {
+            addDataBtn.disabled = data.xAxis.length >= 12;
+        }
+        
+        // Update series buttons (for line and stack charts)
+        if (chartType === 'line' || chartType === 'stack') {
+            const removeSeriesBtn = document.querySelector('.data-btn[onclick="removeSeries()"]');
+            const addSeriesBtn = document.querySelector('.data-btn[onclick="addSeries()"]');
+            
+            if (removeSeriesBtn) {
+                removeSeriesBtn.disabled = data.series.length <= 1;
+            }
+            if (addSeriesBtn) {
+                addSeriesBtn.disabled = data.series.length >= 6;
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error updating data management buttons:', error);
     }
 }
 
@@ -1287,6 +1334,14 @@ function removeSeries() {
 function updateDataValue(chartType, seriesIndex, dataIndex, newValue) {
     try {
         const value = parseInt(newValue);
+        
+        // ADD THIS: Validate indices exist
+        const data = sampleData[chartType];
+        if (!data.series[seriesIndex] || !data.series[seriesIndex].data[dataIndex] === undefined) {
+            console.warn('Invalid data indices:', seriesIndex, dataIndex);
+            return;
+        }
+        
         sampleData[chartType].series[seriesIndex].data[dataIndex] = value;
         
         // Update display value
