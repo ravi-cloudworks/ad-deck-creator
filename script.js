@@ -10,7 +10,6 @@ let isCustomizeMode = false;
 const themeColors = {
     custom: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc']
 };
-
 // Sample data for different chart types
 const sampleData = {
     bar: {
@@ -100,6 +99,21 @@ function init() {
             console.error('❌ Error during main initialization:', error);
         }
     }, 200);
+}
+
+function getCurrentSlideColors() {
+    const currentSlide = slides[currentSlideIndex];
+    if (!currentSlide) {
+        return themeColors.custom;
+    }
+    
+    // If slide doesn't have its own colors, initialize them
+    if (!currentSlide.colors) {
+        currentSlide.colors = [...themeColors.custom]; // Create a copy
+        console.log('Initialized colors for slide:', currentSlide.title);
+    }
+    
+    return currentSlide.colors;
 }
 
 // Toggle customize mode
@@ -215,21 +229,34 @@ function applySelectedColor() {
         if (!colorPicker) return;
         
         const color = colorPicker.value;
+        const currentSlide = slides[currentSlideIndex];
+        
+        if (!currentSlide) {
+            console.warn('No current slide found for color application');
+            return;
+        }
         
         if (currentColorPickerIndex === -1) {
             // This is for text color
-            if (slides[currentSlideIndex]) {
-                slides[currentSlideIndex].customTextColor = color;
-                updateChart();
-            }
+            currentSlide.customTextColor = color;
+            updateChart();
         } else if (currentColorPickerIndex >= 0) {
             // This is for theme colors
-            themeColors.custom[currentColorPickerIndex] = color;
+            const slideColors = getCurrentSlideColors(); // This will initialize if needed
+            
+            // Update the specific color for this slide only
+            slideColors[currentColorPickerIndex] = color;
+            
+            // Update the color dot display
             const colorDot = document.getElementById(`custom-color-${currentColorPickerIndex + 1}`);
             if (colorDot) {
                 colorDot.style.background = color;
             }
+            
+            // Update the chart with the new colors
             updateChart();
+            
+            console.log(`Updated color ${currentColorPickerIndex} to ${color} for slide:`, currentSlide.title);
         }
         
         closeColorPicker();
@@ -294,10 +321,26 @@ function addSlide() {
             theme: 'custom',
             backgroundImage: globalBackgroundImage,
             title: `Slide ${slides.length + 1}`,
-            customTextColor: null
+            customTextColor: null,
+            colors: [...themeColors.custom] // Per-slide colors
         };
         
-        slides.push(slide);
+        // Find if there's a back cover slide
+        const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
+        
+        let insertIndex;
+        if (backCoverIndex !== -1) {
+            // Insert before back cover
+            insertIndex = backCoverIndex;
+            slides.splice(backCoverIndex, 0, slide);
+            console.log('📊 Chart slide inserted before back cover at index:', insertIndex);
+        } else {
+            // No back cover, add at end
+            insertIndex = slides.length;
+            slides.push(slide);
+            console.log('📊 Chart slide added at end, index:', insertIndex);
+        }
+        
         console.log('📊 Chart slide data created:', slide);
         
         // Create slide element
@@ -323,11 +366,20 @@ function addSlide() {
         
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
-            slideContainer.appendChild(slideElement);
-            console.log('📊 Chart slide element added to DOM');
+            // Insert at the correct DOM position
+            if (backCoverIndex !== -1) {
+                // Insert before back cover slide in DOM
+                const backCoverElement = document.getElementById(slides[backCoverIndex + 1].id); // +1 because we already inserted
+                slideContainer.insertBefore(slideElement, backCoverElement);
+            } else {
+                // Add at end
+                slideContainer.appendChild(slideElement);
+            }
+            
+            console.log('📊 Chart slide element added to DOM at correct position');
             
             // Switch to new slide
-            currentSlideIndex = slides.length - 1;
+            currentSlideIndex = insertIndex;
             console.log('📊 Current slide index set to:', currentSlideIndex);
             
             // Use setTimeout to ensure DOM is updated
@@ -342,7 +394,12 @@ function addSlide() {
             }, 100);
         } else {
             console.error('❌ Slide container not found');
-            slides.pop();
+            // Remove from slides array if DOM insertion failed
+            if (backCoverIndex !== -1) {
+                slides.splice(insertIndex, 1);
+            } else {
+                slides.pop();
+            }
         }
         
         console.log('✅ COMPLETED addSlide()');
@@ -416,9 +473,9 @@ function showSlide(index) {
         const slideToShow = slides[index];
         if (customizeBtn && slideToShow) {
             if (slideToShow.isCoverSlide) {
-                customizeBtn.style.visibility = 'hidden'; // Make invisible instead of display none
+                customizeBtn.style.visibility = 'hidden';
             } else {
-                customizeBtn.style.visibility = 'visible'; // Make visible
+                customizeBtn.style.visibility = 'visible';
             }
         }
         
@@ -457,6 +514,17 @@ function showSlide(index) {
             }
         }
         
+        // SAFER: Update color dots only for chart slides
+        try {
+            if (currentSlide && !currentSlide.isCoverSlide && !currentSlide.isVideoSlide) {
+                const slideColors = getCurrentSlideColors();
+                updateColorDots(slideColors);
+            }
+        } catch (colorError) {
+            console.warn('Error updating color dots:', colorError);
+            // Don't fail the entire function if color update fails
+        }
+        
         // Update counter (safely)
         const currentSlideSpan = document.getElementById('currentSlide');
         const totalSlidesSpan = document.getElementById('totalSlides');
@@ -482,12 +550,37 @@ function showSlide(index) {
     }
 }
 
+function updateColorDots(colors) {
+    try {
+        if (!colors || !Array.isArray(colors)) {
+            console.warn('Invalid colors array, using default');
+            colors = themeColors.custom;
+        }
+        
+        for (let i = 0; i < 5; i++) {
+            const colorDot = document.getElementById(`custom-color-${i + 1}`);
+            if (colorDot && colors[i]) {
+                colorDot.style.background = colors[i];
+            }
+        }
+        console.log('Color dots updated successfully');
+    } catch (error) {
+        console.error('Error updating color dots:', error);
+    }
+}
+
 function updateChart() {
     try {
         console.log('updateChart called');
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) {
             console.error('No current slide found');
+            return;
+        }
+        
+        // Skip chart update for non-chart slides
+        if (currentSlide.isCoverSlide || currentSlide.isVideoSlide) {
+            console.log('Skipping chart update for non-chart slide');
             return;
         }
         
@@ -508,6 +601,16 @@ function updateChart() {
         
         const data = sampleData[chartType];
         const textColor = getCurrentTextColor();
+        
+        // SAFER: Get colors with fallback
+        let slideColors;
+        try {
+            slideColors = getCurrentSlideColors();
+        } catch (colorError) {
+            console.warn('Error getting slide colors, using default:', colorError);
+            slideColors = themeColors.custom;
+        }
+        
         let option = {};
         
         if (chartType === 'bar') {
@@ -543,7 +646,7 @@ function updateChart() {
                         }
                     }
                 },
-                color: themeColors.custom,
+                color: slideColors,
                 series: [{
                     name: data.series[0].name,
                     type: 'bar',
@@ -584,7 +687,7 @@ function updateChart() {
                         }
                     }
                 },
-                color: themeColors.custom,
+                color: slideColors,
                 series: data.series.map(s => ({
                     name: s.name,
                     type: 'line',
@@ -628,7 +731,7 @@ function updateChart() {
                         }
                     }
                 },
-                color: themeColors.custom,
+                color: slideColors,
                 series: data.series.map(s => ({
                     name: s.name,
                     type: 'bar',
@@ -640,7 +743,7 @@ function updateChart() {
         }
         
         chartInstance.setOption(option);
-        console.log('Chart updated successfully');
+        console.log('Chart updated successfully with slide colors');
         
         // Handle resize for customize mode
         if (isCustomizeMode) {
