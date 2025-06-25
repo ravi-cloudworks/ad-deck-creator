@@ -292,32 +292,29 @@ function createSlidesFromSegments() {
         console.log('No video segments to create slides from');
         return;
     }
-    
-    console.log('Creating slides from segments...');
-    
-    // Clear existing slides first (optional - for clean start)
-    // clearAllSlides();
-    
+
+    // Clear existing slides in DOM and array
+    const slideContainer = document.getElementById('slideContainer');
+    if (slideContainer) slideContainer.innerHTML = '';
+    slides.length = 0;
+
     // Add front cover if present
     if (frontCoverUrl) {
         createCoverSlide(frontCoverUrl, true);
     }
-    
-    // Create slides for each segment
+
+    // Add main slides
     videoSegments.forEach((segment, index) => {
         createSlideFromSegment(segment, index);
     });
-    
+
     // Add back cover if present
     if (backCoverUrl) {
         createCoverSlide(backCoverUrl, false);
     }
-    
-    // Update UI
+
     updateSlideList();
     updateNavigation();
-    
-    console.log(`Created ${videoSegments.length} slides from video segments`);
 }
 
 // Create a single slide from a segment
@@ -921,6 +918,13 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
         
+        if (currentSlide.isFrontCover || currentSlide.isBackCover) {
+            // Hide customize controls
+            if (editActions) editActions.style.display = 'none';
+            // Optionally hide other controls/tabs as well
+            return;
+        }
+        
     } catch (error) {
         console.error('Error updating tabs:', error);
     }
@@ -957,96 +961,6 @@ function toggleAccordion(accordionId) {
         
     } catch (error) {
         console.error('Error toggling accordion:', error);
-    }
-}
-
-// Update tabs based on current slide type
-function updateTabsForCurrentSlide() {
-    try {
-        const currentSlide = slides[currentSlideIndex];
-        if (!currentSlide) return;
-        
-        const chartTab = document.getElementById('chartTab');
-        const videoTab = document.getElementById('videoTab');
-        const commonTab = document.getElementById('commonTab');
-        const editCurrentVideoSection = document.getElementById('editCurrentVideoSection');
-        const editCurrentImageSection = document.getElementById('editCurrentImageSection');
-        const noSlideSelected = document.getElementById('noSlideSelected');
-        
-        if (!chartTab || !videoTab || !commonTab) return;
-        
-        console.log('Updating tabs for slide type:', currentSlide.chartType);
-        
-        if (currentSlide.isVideoSlide) {
-            // Video or Image slide
-            chartTab.style.display = 'none';
-            videoTab.style.display = 'block';
-            commonTab.style.display = 'block';
-            
-            // Show appropriate edit section based on slide type
-            if (currentSlide.videoSegment && currentSlide.videoSegment.type === 'video') {
-                // Video slide - show video edit section
-                if (editCurrentVideoSection) {
-                    editCurrentVideoSection.style.display = 'block';
-                    setupEditVideoSection(currentSlide);
-                }
-                if (editCurrentImageSection) {
-                    editCurrentImageSection.style.display = 'none';
-                }
-                if (noSlideSelected) {
-                    noSlideSelected.style.display = 'none';
-                }
-            } else if (currentSlide.videoSegment && currentSlide.videoSegment.type === 'image') {
-                // Image slide - show image edit section
-                if (editCurrentImageSection) {
-                    editCurrentImageSection.style.display = 'block';
-                    setupEditImageSection(currentSlide);
-                }
-                if (editCurrentVideoSection) {
-                    editCurrentVideoSection.style.display = 'none';
-                }
-                if (noSlideSelected) {
-                    noSlideSelected.style.display = 'none';
-                }
-            } else {
-                // Hide both edit sections, show message
-                if (editCurrentVideoSection) {
-                    editCurrentVideoSection.style.display = 'none';
-                }
-                if (editCurrentImageSection) {
-                    editCurrentImageSection.style.display = 'none';
-                }
-                if (noSlideSelected) {
-                    noSlideSelected.style.display = 'block';
-                }
-            }
-            
-            // Auto-switch to video tab
-            switchTab('video');
-            
-        } else {
-            // Chart slide
-            chartTab.style.display = 'block';
-            videoTab.style.display = 'none';
-            commonTab.style.display = 'block';
-            
-            // Hide edit sections, show message
-            if (editCurrentVideoSection) {
-                editCurrentVideoSection.style.display = 'none';
-            }
-            if (editCurrentImageSection) {
-                editCurrentImageSection.style.display = 'none';
-            }
-            if (noSlideSelected) {
-                noSlideSelected.style.display = 'block';
-            }
-            
-            // Auto-switch to chart tab
-            switchTab('chart');
-        }
-        
-    } catch (error) {
-        console.error('Error updating tabs:', error);
     }
 }
 
@@ -1887,20 +1801,19 @@ function createCoverSlide(imageUrl, isFront) {
 
     slides.push(slide);
 
-    // Create slide element
+    // Use a container similar to video/image slides for consistent layout
     const slideElement = document.createElement('div');
     slideElement.className = 'slide cover-slide';
     slideElement.id = slideId;
     slideElement.innerHTML = `
         <div class="slide-content">
             <h2 class="slide-title">${slide.title}</h2>
-            <div class="cover-image-container">
-                <img src="${imageUrl}" alt="${slide.title}" style="max-width: 100%; max-height: 80vh; border-radius: 12px;"/>
+            <div class="cover-container" style="flex:1;display:flex;align-items:center;justify-content:center;">
+                <img src="${imageUrl}" alt="${slide.title}" style="max-width: 80vw; max-height: 60vh; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);" />
             </div>
         </div>
     `;
 
-    // Add to slide container
     const slideContainer = document.getElementById('slideContainer');
     if (slideContainer) {
         slideContainer.appendChild(slideElement);
