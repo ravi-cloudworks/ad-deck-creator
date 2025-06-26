@@ -10,7 +10,6 @@ let currentVideoUrl = null;
 // Initialize video functionality
 function initVideoSlides() {
     console.log('\n🏁 STARTING initVideoSlides');
-    debugSlideState('BEFORE video initialization');
 
     // Get master video element
     masterVideoElement = document.getElementById('masterVideo');
@@ -22,30 +21,45 @@ function initVideoSlides() {
     // Check JSON data on initial load
     checkJsonData();
 
-    // ADD THIS: Listen for textarea changes (for testing)
+    // ✅ IMPROVED: Better change detection for textarea
     const editorTextarea = document.getElementById('editor');
     if (editorTextarea) {
-        editorTextarea.addEventListener('input', function() {
-            console.log('📝 Textarea content changed, re-parsing JSON...');
-            checkJsonData();
-        });
-        
-        // Also trigger on paste event
-        editorTextarea.addEventListener('paste', function() {
-            setTimeout(() => {
-                console.log('📋 JSON pasted, re-parsing...');
+        let lastValue = editorTextarea.value;
+
+        // Debounced change handler
+        const debouncedCheck = debounce(() => {
+            const currentValue = editorTextarea.value;
+            if (currentValue !== lastValue) {
+                console.log('📝 Textarea content changed, re-parsing JSON...');
+                lastValue = currentValue;
                 checkJsonData();
-            }, 100); // Small delay to let paste complete
+            }
+        }, 300); // Wait 300ms after user stops typing
+
+        editorTextarea.addEventListener('input', debouncedCheck);
+        editorTextarea.addEventListener('paste', () => {
+            setTimeout(debouncedCheck, 100);
         });
-        
-        console.log('👂 Added textarea change listeners');
+
+        console.log('👂 Added improved textarea change listeners');
     }
 
     // Setup video event listeners
     setupVideoEventListeners();
 
     console.log('✅ Video slides module initialized');
-    debugSlideState('AFTER video initialization');
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
 
 // ALTERNATIVE: Add manual trigger button for testing
@@ -107,16 +121,37 @@ function addTestTriggerButton() {
 function checkJsonData() {
     console.log('\n🔍 Checking JSON data from textarea...');
 
-    // Get data from hidden textarea (like reference app)
+    // Get data from hidden textarea
     const editorTextarea = document.getElementById('editor');
     if (!editorTextarea || !editorTextarea.value.trim()) {
         console.log('📊 No JSON data found in textarea, keeping chart slides only');
         return;
     }
 
+    // ✅ SMART DUPLICATE PREVENTION: Check if JSON actually changed
+    const currentJsonString = editorTextarea.value.trim();
+
+    if (window.lastProcessedJson && window.lastProcessedJson === currentJsonString) {
+        console.log('🔄 JSON unchanged, skipping duplicate processing');
+        return;
+    }
+
+    // ✅ PREVENT RAPID CALLS: But allow legitimate changes
+    if (window.isProcessingJson) {
+        console.log('⏳ Currently processing, will retry in 500ms...');
+        setTimeout(() => {
+            window.isProcessingJson = false;
+            checkJsonData(); // Retry after current processing
+        }, 500);
+        return;
+    }
+
     try {
-        // Parse JSON data (like reference app)
-        const jsonData = JSON.parse(editorTextarea.value);
+        window.isProcessingJson = true;
+        window.lastProcessedJson = currentJsonString; // Store current JSON
+
+        // Parse JSON data
+        const jsonData = JSON.parse(currentJsonString);
         console.log('✅ JSON data parsed successfully:', jsonData);
 
         // Extract video and image URLs
@@ -124,7 +159,7 @@ function checkJsonData() {
         const frontCover = jsonData['front-cover'];
         const backCover = jsonData['last-cover'];
         const backgroundImage = jsonData['background'];
-        const videoSegments = jsonData['video-ads']; // This replaces filename parsing!
+        const videoSegments = jsonData['video-ads'];
 
         console.log('📹 Video source:', videoUrl);
         console.log('🎬 Video segments:', videoSegments);
@@ -133,15 +168,22 @@ function checkJsonData() {
         console.log('🖼️ Background:', backgroundImage);
 
         // Apply background image if provided
-        if (backgroundImage) {
-            console.log('🖼️ Loading background image from JSON...');
-            loadBackgroundFromUrl(backgroundImage);
-        }
+        // if (backgroundImage) {
+        //     console.log('🖼️ Loading background image from JSON...');
+        //     loadBackgroundFromUrl(backgroundImage);
+        // }
 
         // Load video and create slides if video data exists
         if (videoUrl && videoSegments) {
             console.log('📹 Loading video from JSON data...');
             loadVideoFromJsonData(videoUrl, videoSegments, frontCover, backCover);
+            // Apply background image AFTER slides are created
+            if (backgroundImage) {
+                console.log('🖼️ Loading background image from JSON...');
+                setTimeout(() => {
+                    loadBackgroundFromUrl(backgroundImage);
+                }, 200);
+            }
         } else {
             console.log('📊 No video data found, keeping chart slides only');
         }
@@ -149,17 +191,28 @@ function checkJsonData() {
     } catch (error) {
         console.error('❌ Error parsing JSON from textarea:', error);
         console.log('📊 Falling back to chart slides only');
+    } finally {
+        // ✅ CLEAR FLAG: Allow processing again after delay
+        setTimeout(() => {
+            window.isProcessingJson = false;
+        }, 1000); // Shorter delay for better responsiveness
     }
 }
 
 function loadVideoFromJsonData(videoUrl, videoSegmentsString, frontCover, backCover) {
     try {
         console.log('\n🎬 STARTING loadVideoFromJsonData');
-        debugSlideState('BEFORE loading video from JSON');
+
+        // ✅ FORCE CLEAR: Always clear when loading new JSON data
+        console.log('🧹 Force clearing existing slides for JSON update...');
+        if (slides.length > 0) {
+            clearAllSlides();
+            console.log('✅ Existing slides cleared');
+        }
 
         currentVideoUrl = videoUrl;
 
-        // Parse video segments from JSON field (instead of filename)
+        // Parse video segments from JSON field
         console.log('Parsing video segments from JSON field:', videoSegmentsString);
         videoSegments = parseVideoSegmentsFromString(videoSegmentsString);
         console.log('Parsed video segments:', videoSegments);
@@ -193,7 +246,6 @@ function loadVideoFromJsonData(videoUrl, videoSegmentsString, frontCover, backCo
             // Show appropriate initial slide after all slides are created
             setTimeout(() => {
                 console.log('Setting up initial slide display...');
-                debugSlideState('BEFORE initial slide display');
 
                 if (slides.length > 0) {
                     // Always start with the front cover if it exists
@@ -209,7 +261,6 @@ function loadVideoFromJsonData(videoUrl, videoSegmentsString, frontCover, backCo
 
                     console.log('Showing initial slide at index:', currentSlideIndex);
                     showSlide(currentSlideIndex);
-                    debugSlideState('AFTER initial slide display');
                 }
             }, 100);
         } else {
@@ -296,9 +347,9 @@ function createSlidesFromSegmentsWithCovers(frontCover, backCover) {
         customTextColor: null,
         colors: [...themeColors.custom]
     };
-    
+
     slides.push(chartSlide);
-    
+
     // Create chart slide element
     const chartSlideElement = document.createElement('div');
     chartSlideElement.className = 'slide';
@@ -311,14 +362,14 @@ function createSlidesFromSegmentsWithCovers(frontCover, backCover) {
             </div>
         </div>
     `;
-    
+
     if (globalBackgroundImage) {
         chartSlideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
         chartSlideElement.style.backgroundSize = 'cover';
         chartSlideElement.style.backgroundPosition = 'center';
         chartSlideElement.style.backgroundRepeat = 'no-repeat';
     }
-    
+
     const slideContainer = document.getElementById('slideContainer');
     if (slideContainer) {
         slideContainer.appendChild(chartSlideElement);
@@ -1627,14 +1678,14 @@ function retrySafariImageCapture(slideId) {
 function clearAllSlides() {
     try {
         console.log('🧹 Clearing all existing slides...');
-        
+
         // Dispose chart instance to prevent memory leaks
         if (chartInstance) {
             chartInstance.clear();
             chartInstance.dispose();
             chartInstance = null;
         }
-        
+
         // Clear slides array
         slides.length = 0;
         currentSlideIndex = 0;
