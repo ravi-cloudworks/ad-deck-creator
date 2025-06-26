@@ -47,26 +47,24 @@ function init() {
     setTimeout(() => {
         console.log('🔧 Starting main initialization');
         try {
-            // Check if we have a video_url parameter
-            const urlParams = new URLSearchParams(window.location.search);
-            const hasVideoUrl = urlParams.get('video_url');
+            // ✅ NEW: Check if we have JSON data first
+            const editorTextarea = document.getElementById('editor');
+            const hasJsonData = editorTextarea && editorTextarea.value.trim();
             
-            console.log('URL check in main init:', {
-                hasVideoUrl: !!hasVideoUrl,
-                videoUrl: hasVideoUrl
+            console.log('JSON data check:', {
+                hasJsonData: !!hasJsonData,
+                jsonLength: hasJsonData ? editorTextarea.value.length : 0
             });
             
-            // ALWAYS create the default chart slide first
-            console.log('📊 Creating default chart slide (always)');
-            addSlide();
-            updateSlideList();
-            updateNavigation();
-            console.log('✅ Default chart slide created');
-            
-            if (hasVideoUrl) {
-                console.log('🎬 Video URL found, video slides will be added to existing chart slide');
+            // ✅ FIXED: Only create default chart slide if NO JSON data exists
+            if (!hasJsonData) {
+                console.log('📊 No JSON data found, creating default chart slide');
+                addSlide();
+                updateSlideList();
+                updateNavigation();
+                console.log('✅ Default chart slide created');
             } else {
-                console.log('📊 No video URL found, only chart slide will be available');
+                console.log('🎬 JSON data found, video-slides.js will handle slide creation');
             }
             
             // Add event listeners for iPad interface (with safety checks)
@@ -95,7 +93,8 @@ function init() {
                 debugSlideState('AFTER main init completion');
             }, 50);
             
-        } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+        } catch (error) { 
+            sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
             console.error('❌ Error during main initialization:', error);
         }
     }, 200);
@@ -752,7 +751,9 @@ function updateChart() {
         
         // Dispose previous chart instance
         if (chartInstance) {
+            chartInstance.clear();      // ← ADD: Clear chart data
             chartInstance.dispose();
+            chartInstance = null;       // ← ADD: Release reference
         }
         
         // Create new chart

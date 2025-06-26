@@ -9,7 +9,7 @@ let currentVideoUrl = null;
 
 // Initialize video functionality
 function initVideoSlides() {
-    console.log('\n🚀 STARTING initVideoSlides');
+    console.log('\n🏁 STARTING initVideoSlides');
     debugSlideState('BEFORE video initialization');
 
     // Get master video element
@@ -19,8 +19,27 @@ function initVideoSlides() {
         return;
     }
 
-    // Check for video URL parameter
-    checkVideoUrlParameter();
+    // Check JSON data on initial load
+    checkJsonData();
+
+    // ADD THIS: Listen for textarea changes (for testing)
+    const editorTextarea = document.getElementById('editor');
+    if (editorTextarea) {
+        editorTextarea.addEventListener('input', function() {
+            console.log('📝 Textarea content changed, re-parsing JSON...');
+            checkJsonData();
+        });
+        
+        // Also trigger on paste event
+        editorTextarea.addEventListener('paste', function() {
+            setTimeout(() => {
+                console.log('📋 JSON pasted, re-parsing...');
+                checkJsonData();
+            }, 100); // Small delay to let paste complete
+        });
+        
+        console.log('👂 Added textarea change listeners');
+    }
 
     // Setup video event listeners
     setupVideoEventListeners();
@@ -29,34 +48,377 @@ function initVideoSlides() {
     debugSlideState('AFTER video initialization');
 }
 
+// ALTERNATIVE: Add manual trigger button for testing
+function addTestTriggerButton() {
+    const button = document.createElement('button');
+    button.textContent = '🔄 Parse JSON';
+    button.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 9999;
+        padding: 10px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    `;
+    button.onclick = () => {
+        console.log('🔄 Manual trigger clicked');
+        checkJsonData();
+    };
+    document.body.appendChild(button);
+    console.log('✅ Added manual trigger button');
+}
+
+
 // MODIFIED: Check video URL parameter with debug
-function checkVideoUrlParameter() {
-    console.log('\n🔍 Checking URL parameters...');
+// function checkVideoUrlParameter() {
+//     console.log('\n🔍 Checking URL parameters...');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const videoUrl = urlParams.get('video_url');
-    const frontCover = urlParams.get('front_cover');
-    const backCover = urlParams.get('back_cover');
-    const backgroundImage = urlParams.get('background_image');
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const videoUrl = urlParams.get('video_url');
+//     const frontCover = urlParams.get('front_cover');
+//     const backCover = urlParams.get('back_cover');
+//     const backgroundImage = urlParams.get('background_image');
 
-    console.log('URL Parameters found:', {
-        video_url: videoUrl,
-        front_cover: frontCover,
-        back_cover: backCover,
-        background_image: backgroundImage
-    });
+//     console.log('URL Parameters found:', {
+//         video_url: videoUrl,
+//         front_cover: frontCover,
+//         back_cover: backCover,
+//         background_image: backgroundImage
+//     });
 
-    // Apply background image if provided
-    if (backgroundImage) {
-        console.log('🖼️ Background image URL found, loading...');
-        loadBackgroundFromUrl(backgroundImage);
+//     // Apply background image if provided
+//     if (backgroundImage) {
+//         console.log('🖼️ Background image URL found, loading...');
+//         loadBackgroundFromUrl(backgroundImage);
+//     }
+
+//     if (videoUrl) {
+//         console.log('📹 Video URL found, loading video...');
+//         loadVideoFromUrl(videoUrl);
+//     } else {
+//         console.log('📊 No video URL parameter found, keeping chart slides');
+//     }
+// }
+
+function checkJsonData() {
+    console.log('\n🔍 Checking JSON data from textarea...');
+
+    // Get data from hidden textarea (like reference app)
+    const editorTextarea = document.getElementById('editor');
+    if (!editorTextarea || !editorTextarea.value.trim()) {
+        console.log('📊 No JSON data found in textarea, keeping chart slides only');
+        return;
     }
 
-    if (videoUrl) {
-        console.log('📹 Video URL found, loading video...');
-        loadVideoFromUrl(videoUrl);
-    } else {
-        console.log('📊 No video URL parameter found, keeping chart slides');
+    try {
+        // Parse JSON data (like reference app)
+        const jsonData = JSON.parse(editorTextarea.value);
+        console.log('✅ JSON data parsed successfully:', jsonData);
+
+        // Extract video and image URLs
+        const videoUrl = jsonData['video-source'];
+        const frontCover = jsonData['front-cover'];
+        const backCover = jsonData['last-cover'];
+        const backgroundImage = jsonData['background'];
+        const videoSegments = jsonData['video-ads']; // This replaces filename parsing!
+
+        console.log('📹 Video source:', videoUrl);
+        console.log('🎬 Video segments:', videoSegments);
+        console.log('🖼️ Front cover:', frontCover);
+        console.log('🖼️ Back cover:', backCover);
+        console.log('🖼️ Background:', backgroundImage);
+
+        // Apply background image if provided
+        if (backgroundImage) {
+            console.log('🖼️ Loading background image from JSON...');
+            loadBackgroundFromUrl(backgroundImage);
+        }
+
+        // Load video and create slides if video data exists
+        if (videoUrl && videoSegments) {
+            console.log('📹 Loading video from JSON data...');
+            loadVideoFromJsonData(videoUrl, videoSegments, frontCover, backCover);
+        } else {
+            console.log('📊 No video data found, keeping chart slides only');
+        }
+
+    } catch (error) {
+        console.error('❌ Error parsing JSON from textarea:', error);
+        console.log('📊 Falling back to chart slides only');
+    }
+}
+
+function loadVideoFromJsonData(videoUrl, videoSegmentsString, frontCover, backCover) {
+    try {
+        console.log('\n🎬 STARTING loadVideoFromJsonData');
+        debugSlideState('BEFORE loading video from JSON');
+
+        currentVideoUrl = videoUrl;
+
+        // Parse video segments from JSON field (instead of filename)
+        console.log('Parsing video segments from JSON field:', videoSegmentsString);
+        videoSegments = parseVideoSegmentsFromString(videoSegmentsString);
+        console.log('Parsed video segments:', videoSegments);
+
+        // Set video source
+        masterVideoElement.src = videoUrl;
+
+        // Setup timeline previews if controls exist
+        const timelinePreview = document.getElementById('timelinePreview');
+        if (timelinePreview) {
+            timelinePreview.src = videoUrl;
+            setupTimelinePreview();
+        }
+
+        const editTimelinePreview = document.getElementById('editTimelinePreview');
+        if (editTimelinePreview) {
+            editTimelinePreview.src = videoUrl;
+        }
+
+        const imageTimelinePreview = document.getElementById('imageTimelinePreview');
+        if (imageTimelinePreview) {
+            imageTimelinePreview.src = videoUrl;
+            setupImageTimelinePreview();
+        }
+
+        // Create slides based on segments
+        if (videoSegments.length > 0) {
+            console.log('Creating slides from', videoSegments.length, 'segments...');
+            createSlidesFromSegmentsWithCovers(frontCover, backCover);
+
+            // Show appropriate initial slide after all slides are created
+            setTimeout(() => {
+                console.log('Setting up initial slide display...');
+                debugSlideState('BEFORE initial slide display');
+
+                if (slides.length > 0) {
+                    // Always start with the front cover if it exists
+                    const frontCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'front');
+
+                    if (frontCoverIndex !== -1) {
+                        console.log('Starting with front cover at index:', frontCoverIndex);
+                        currentSlideIndex = frontCoverIndex;
+                    } else {
+                        console.log('No front cover, starting with first slide');
+                        currentSlideIndex = 0;
+                    }
+
+                    console.log('Showing initial slide at index:', currentSlideIndex);
+                    showSlide(currentSlideIndex);
+                    debugSlideState('AFTER initial slide display');
+                }
+            }, 100);
+        } else {
+            console.log('No video segments found, keeping existing slides');
+        }
+
+        console.log('✅ COMPLETED loadVideoFromJsonData');
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+        console.error('❌ Error loading video from JSON data:', error);
+    }
+}
+
+function parseVideoSegmentsFromString(segmentsString) {
+    try {
+        // Input: "ad-0s-15s_img-16s_ad-17s-30s_img-31s_ad-32s-60s"
+        // Same parsing logic, but from string instead of filename
+
+        if (!segmentsString || typeof segmentsString !== 'string') {
+            console.log('No valid segments string provided');
+            return [];
+        }
+
+        // Split by underscore to get segments
+        const segmentParts = segmentsString.split('_');
+
+        if (segmentParts.length < 1) {
+            console.log('No segments found in string');
+            return [];
+        }
+
+        const segments = [];
+
+        segmentParts.forEach((segment, index) => {
+            const parsed = parseSegment(segment, index);
+            if (parsed) {
+                parsed.campaignName = 'Campaign'; // Default campaign name
+                segments.push(parsed);
+            }
+        });
+
+        return segments;
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+        console.error('Error parsing video segments from string:', error);
+        return [];
+    }
+}
+
+function createSlidesFromSegmentsWithCovers(frontCover, backCover) {
+    console.log('\n🔍 STARTING createSlidesFromSegmentsWithCovers');
+    debugSlideState('BEFORE creating video slides');
+
+    if (videoSegments.length === 0) {
+        console.log('No video segments to create slides from');
+        return;
+    }
+
+    console.log('Creating slides from segments...');
+    console.log('Video segments found:', videoSegments.length);
+
+    // ✅ FIXED: Clear existing slides first to prevent duplicates
+    console.log('🧹 Clearing existing slides to prevent duplicates...');
+    clearAllSlides();
+
+    // STEP 1: Create front cover if exists
+    if (frontCover) {
+        console.log('Creating front cover...');
+        createCoverSlide(frontCover, 'Front Cover', 'front');
+        debugSlideState('AFTER creating front cover');
+    }
+
+    // STEP 2: Create default chart slide (always needed)
+    console.log('📊 Creating default chart slide...');
+    const chartSlideId = `slide-${Date.now()}`;
+    const chartSlide = {
+        id: chartSlideId,
+        chartType: 'bar',
+        theme: 'custom',
+        backgroundImage: globalBackgroundImage,
+        title: 'Monthly Sales Data',
+        customTextColor: null,
+        colors: [...themeColors.custom]
+    };
+    
+    slides.push(chartSlide);
+    
+    // Create chart slide element
+    const chartSlideElement = document.createElement('div');
+    chartSlideElement.className = 'slide';
+    chartSlideElement.id = chartSlideId;
+    chartSlideElement.innerHTML = `
+        <div class="slide-content">
+            <h2 class="slide-title">${chartSlide.title}</h2>
+            <div class="chart-container">
+                <div id="chart-${chartSlideId}" style="width: 100%; height: 100%;"></div>
+            </div>
+        </div>
+    `;
+    
+    if (globalBackgroundImage) {
+        chartSlideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
+        chartSlideElement.style.backgroundSize = 'cover';
+        chartSlideElement.style.backgroundPosition = 'center';
+        chartSlideElement.style.backgroundRepeat = 'no-repeat';
+    }
+    
+    const slideContainer = document.getElementById('slideContainer');
+    if (slideContainer) {
+        slideContainer.appendChild(chartSlideElement);
+    }
+
+    // STEP 3: Create slides for each video segment (insert at end, before back cover)
+    console.log('Creating slides for', videoSegments.length, 'video segments...');
+    videoSegments.forEach((segment, index) => {
+        console.log(`Creating slide ${index + 1}/${videoSegments.length} for segment:`, segment.title);
+        createSlideFromSegmentSimple(segment, index);
+    });
+
+    debugSlideState('AFTER creating video segment slides');
+
+    // STEP 4: Create back cover if exists (add at very end)
+    if (backCover) {
+        console.log('Creating back cover...');
+        createCoverSlide(backCover, 'Back Cover', 'back');
+        debugSlideState('AFTER creating back cover');
+    }
+
+    // Update UI
+    updateSlideList();
+    updateNavigation();
+
+    console.log(`✅ COMPLETED: Created ${slides.length} slides total`);
+    debugSlideState('FINAL STATE after createSlidesFromSegmentsWithCovers');
+}
+
+
+function createSlideFromSegmentSimple(segment, index) {
+    try {
+        const slideId = `video-slide-${Date.now()}-${index}`;
+
+        const slide = {
+            id: slideId,
+            chartType: segment.type === 'video' ? 'video' : 'image',
+            theme: 'custom',
+            backgroundImage: globalBackgroundImage,
+            title: segment.title,
+            customTextColor: null,
+            videoSegment: segment,
+            isVideoSlide: true
+        };
+
+        // ✅ SIMPLE: Just append to slides array (no complex insertion logic)
+        slides.push(slide);
+        console.log(`Added ${segment.title} at index ${slides.length - 1}`);
+
+        // Create slide element
+        const slideElement = document.createElement('div');
+        slideElement.className = 'slide video-slide';
+        slideElement.id = slideId;
+
+        if (segment.type === 'video') {
+            slideElement.innerHTML = `
+                <div class="slide-content">
+                    <h2 class="slide-title">${segment.title}</h2>
+                    <div class="video-container">
+                        <div class="video-placeholder">
+                            📹 Video Segment
+                            <div class="video-details">Click play to view</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            slideElement.innerHTML = `
+                <div class="slide-content">
+                    <h2 class="slide-title">${segment.title}</h2>
+                    <div class="image-container">
+                        <div class="image-placeholder">
+                            🖼️ Campaign Image
+                            <div class="image-details">Video frame capture</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Apply background if exists
+        if (globalBackgroundImage) {
+            slideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
+            slideElement.style.backgroundSize = 'cover';
+            slideElement.style.backgroundPosition = 'center';
+            slideElement.style.backgroundRepeat = 'no-repeat';
+        }
+
+        // ✅ SIMPLE: Just append to slide container
+        const slideContainer = document.getElementById('slideContainer');
+        if (slideContainer) {
+            slideContainer.appendChild(slideElement);
+            console.log(`DOM: Appended ${segment.title}`);
+        }
+
+        console.log('✅ Created slide for segment:', segment.title);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+        console.error('❌ Error creating slide from segment:', error);
     }
 }
 
@@ -132,7 +494,8 @@ function loadBackgroundFromUrl(imageUrl) {
         // Start loading the image
         img.src = imageUrl;
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error loading background from URL:', error);
     }
 }
@@ -243,7 +606,8 @@ function createCoverSlide(imageUrl, title, position) {
         console.log(`✅ Created ${position} cover slide successfully`);
         debugSlideState(`AFTER creating ${position} cover`);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error(`❌ Error creating ${position} cover slide:`, error);
     }
 }
@@ -325,7 +689,8 @@ function loadVideoFromUrl(videoUrl) {
 
         console.log('✅ COMPLETED loadVideoFromUrl');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error loading video from URL:', error);
     }
 }
@@ -361,7 +726,8 @@ function parseVideoSegments(filename) {
 
         return segments;
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing video segments:', error);
         return [];
     }
@@ -410,7 +776,8 @@ function parseSegment(segmentString, index) {
             return null;
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing segment:', segmentString, error);
         return null;
     }
@@ -433,7 +800,8 @@ function parseTimeToSeconds(timeString) {
         // Simple seconds
         return parseInt(cleanTime) || 0;
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error parsing time string:', timeString, error);
         return 0;
     }
@@ -667,7 +1035,8 @@ function createSlideFromSegmentFixed(segment, index) {
 
         console.log('✅ Created slide for segment:', segment.title);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error creating slide from segment:', error);
     }
 }
@@ -708,7 +1077,8 @@ function showVideoSlide(slideIndex) {
 
         return true; // Successfully handled video slide
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error showing video slide:', error);
         return false;
     }
@@ -753,7 +1123,8 @@ function resetAndPlayVideo(slideId, segment) {
             });
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error resetting video:', error);
     }
 }
@@ -768,7 +1139,8 @@ function seekVideoToTime(timeInSeconds) {
     try {
         masterVideoElement.currentTime = timeInSeconds;
         console.log('Seeked video to:', timeInSeconds, 'seconds');
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error seeking video:', error);
     }
 }
@@ -840,7 +1212,8 @@ function showVideoPlayer(slideId, segment) {
         // Try to play immediately since video is pre-buffered
         playVideo();
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error showing video player:', error);
     }
 }
@@ -897,7 +1270,8 @@ function addSafariPlayButton(container, video, segment) {
 
         console.log('Safari play button added');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error adding Safari play button:', error);
     }
 }
@@ -934,7 +1308,8 @@ function playVideoSegmentAuto(slideId, segment) {
 
         playerVideo.addEventListener('timeupdate', stopPlayback);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error auto-playing video segment:', error);
     }
 }
@@ -967,7 +1342,8 @@ function playVideoSegment(slideId) {
 
         console.log('Playing video segment:', segment.startTime, 'to', segment.endTime);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error playing video segment:', error);
     }
 }
@@ -1074,7 +1450,8 @@ function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
             }
         }, 3000); // Longer timeout for Safari
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error in captureVideoFrameSafari:', error);
         if (retryCount < maxRetries) {
             setTimeout(() => {
@@ -1191,8 +1568,13 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
         placeholder.parentNode.replaceChild(frameContainer, placeholder);
 
         console.log(`✅ Safari: Video frame captured successfully for ${segment.title} at ${segment.time}s`);
+        // Clean up canvas memory for iPad Safari
+        canvas.width = 0;
+        canvas.height = 0;
+        canvas = null;
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error in performSafariFrameCapture:', error);
         if (retryCount < 3) {
             setTimeout(() => {
@@ -1228,7 +1610,8 @@ function showImageErrorSafari(slideId, errorMessage) {
 
         console.error(`Safari: Image capture failed for slide ${slideId}: ${errorMessage}`);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error showing image error:', error);
     }
 }
@@ -1260,7 +1643,8 @@ function retrySafariImageCapture(slideId) {
             captureVideoFrameSafari(slideId, slide.videoSegment, 0);
         }, 1000);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Safari: Error retrying image capture:', error);
     }
 }
@@ -1268,6 +1652,15 @@ function retrySafariImageCapture(slideId) {
 // Clear all existing slides (utility function)
 function clearAllSlides() {
     try {
+        console.log('🧹 Clearing all existing slides...');
+        
+        // Dispose chart instance to prevent memory leaks
+        if (chartInstance) {
+            chartInstance.clear();
+            chartInstance.dispose();
+            chartInstance = null;
+        }
+        
         // Clear slides array
         slides.length = 0;
         currentSlideIndex = 0;
@@ -1278,10 +1671,11 @@ function clearAllSlides() {
             slideContainer.innerHTML = '';
         }
 
-        console.log('Cleared all slides');
+        console.log('✅ All slides cleared successfully');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
-        console.error('Error clearing slides:', error);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+        console.error('❌ Error clearing slides:', error);
     }
 }
 
@@ -1382,7 +1776,8 @@ function extendShowSlide() {
                     updateTabsForCurrentSlide();
                 }
 
-            } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+            } catch (error) {
+                sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
                 console.error('Error in extended showSlide:', error);
                 // Fallback to original
                 window.originalShowSlide(index);
@@ -1448,7 +1843,8 @@ function switchTab(tabName) {
             }
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error switching tabs:', error);
     }
 }
@@ -1500,7 +1896,8 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating tabs:', error);
     }
 }
@@ -1534,7 +1931,8 @@ function toggleAccordion(accordionId) {
 
         console.log('Accordion toggled:', accordionId, isExpanded ? 'collapsed' : 'expanded');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error toggling accordion:', error);
     }
 }
@@ -1624,7 +2022,8 @@ function updateTabsForCurrentSlide() {
             switchTab('chart');
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating tabs:', error);
     }
 }
@@ -1668,7 +2067,8 @@ function setupEditVideoSection(slide) {
 
         console.log('Edit video section setup complete for:', segment.title);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error setting up edit video section:', error);
     }
 }
@@ -1710,7 +2110,8 @@ function setupEditImageSection(slide) {
 
         console.log('Edit image section setup complete for:', segment.title, 'at time:', editImageFrameTime);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error setting up edit image section:', error);
     }
 }
@@ -1736,7 +2137,8 @@ function handleEditImageTimelineChange(event) {
 
         console.log('Edit image timeline changed to:', time, 'editImageFrameTime updated to:', editImageFrameTime);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error handling edit image timeline change:', error);
     }
 }
@@ -1804,7 +2206,8 @@ function updateImageSlide() {
 
         showAlert(`Image slide updated successfully! New frame time: ${editImageFrameTime}s`);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating image slide:', error);
         showAlert('Error updating image slide. Please try again.');
     }
@@ -1826,7 +2229,8 @@ function handleEditTimelineChange(event) {
         // Update current time display
         updateTimeDisplay('editCurrentTimeDisplay', time);
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error handling edit timeline change:', error);
     }
 }
@@ -1902,7 +2306,8 @@ function updateVideoSlide() {
 
         showAlert('Video slide updated successfully!');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating video slide:', error);
         showAlert('Error updating video slide. Please try again.');
     }
@@ -2031,7 +2436,8 @@ function updateImageTimelinePreview(sliderValue) {
 
         console.log('Image timeline updated successfully');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating image timeline preview:', error);
     }
 }
@@ -2080,7 +2486,8 @@ function createImageSlide() {
 
         showAlert('Image slide created successfully!');
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error creating image slide:', error);
         showAlert('Error creating image slide. Please try again.');
     }
@@ -2139,7 +2546,8 @@ function updateCurrentSlideInfo(slide) {
             }
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error updating current slide info:', error);
     }
 }
@@ -2211,7 +2619,8 @@ function editCurrentSlide() {
             }
         }
 
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('Error editing current slide:', error);
         showAlert('Error editing slide. Please try again.');
     }
@@ -2222,7 +2631,7 @@ function deleteCurrentSlide() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) {
-           showshowAlert('No slide selected to delete.');
+            showshowAlert('No slide selected to delete.');
             return;
         }
 
@@ -2243,44 +2652,45 @@ function deleteCurrentSlide() {
         showConfirm(`Are you sure you want to delete "${currentSlide.title}"?`, (confirmed) => {
             if (!confirmed) return;
 
-        console.log('🗑️ Deleting current slide:', currentSlide.title);
+            console.log('🗑️ Deleting current slide:', currentSlide.title);
 
-        // Remove slide element from DOM
-        const slideToRemove = document.getElementById(currentSlide.id);
-        if (slideToRemove) {
-            slideToRemove.remove();
-            console.log('🗑️ Slide element removed from DOM');
-        }
+            // Remove slide element from DOM
+            const slideToRemove = document.getElementById(currentSlide.id);
+            if (slideToRemove) {
+                slideToRemove.remove();
+                console.log('🗑️ Slide element removed from DOM');
+            }
 
-        // Remove from slides array
-        slides.splice(currentSlideIndex, 1);
-        console.log('🗑️ Slide removed from array');
+            // Remove from slides array
+            slides.splice(currentSlideIndex, 1);
+            console.log('🗑️ Slide removed from array');
 
-        // FIXED: Simple logic - show whatever slide is now at the current position
-        if (currentSlideIndex >= slides.length) {
-            // If we deleted the last slide, go to the previous one
-            currentSlideIndex = slides.length - 1;
-            console.log('📍 Deleted last slide, showing previous slide');
-        } else {
-            // Show the slide that moved into the deleted position
-            console.log('📍 Showing slide that moved to current position');
-        }
+            // FIXED: Simple logic - show whatever slide is now at the current position
+            if (currentSlideIndex >= slides.length) {
+                // If we deleted the last slide, go to the previous one
+                currentSlideIndex = slides.length - 1;
+                console.log('📍 Deleted last slide, showing previous slide');
+            } else {
+                // Show the slide that moved into the deleted position
+                console.log('📍 Showing slide that moved to current position');
+            }
 
-        console.log('🗑️ New current slide index:', currentSlideIndex);
+            console.log('🗑️ New current slide index:', currentSlideIndex);
 
-        // Update UI
-        showSlide(currentSlideIndex);
-        updateSlideList();
-        updateNavigation();
+            // Update UI
+            showSlide(currentSlideIndex);
+            updateSlideList();
+            updateNavigation();
 
-        // Close customize mode if we're now on a cover slide
-        if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide && isCustomizeMode) {
-            toggleCustomizeMode();
-        }
+            // Close customize mode if we're now on a cover slide
+            if (slides[currentSlideIndex] && slides[currentSlideIndex].isCoverSlide && isCustomizeMode) {
+                toggleCustomizeMode();
+            }
 
-        console.log('✅ Slide deleted successfully');
-    });
-    } catch (error) { sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
+            console.log('✅ Slide deleted successfully');
+        });
+    } catch (error) {
+        sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
         console.error('❌ Error in deleteCurrentSlide:', error);
         showAlert('Error deleting slide. Please try again.');
     }
