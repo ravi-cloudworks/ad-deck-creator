@@ -1464,6 +1464,10 @@ function captureVideoFrameSafari(slideId, segment, retryCount = 0) {
 }
 
 function performSafariFrameCapture(slideId, segment, retryCount) {
+    return performSafariFrameCaptureWithLoading(slideId, segment, retryCount);
+}
+
+function performSafariFrameCaptureWithLoading(slideId, segment, retryCount) {
     try {
         const slideElement = document.getElementById(slideId);
         const placeholder = slideElement?.querySelector('.image-placeholder');
@@ -1472,6 +1476,12 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
             console.error('Safari: Slide elements not found during capture');
             return;
         }
+
+        // Show loading state (like production app)
+        placeholder.innerHTML = `
+            🖼️ Capturing Frame...
+            <div class="image-details">Processing ${segment.time}s frame...</div>
+        `;
 
         // Final check of video readiness
         if (masterVideoElement.readyState < 2 || masterVideoElement.videoWidth === 0) {
@@ -1486,96 +1496,60 @@ function performSafariFrameCapture(slideId, segment, retryCount) {
             return;
         }
 
-        // Create canvas with Safari-compatible settings
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', {
-            alpha: false, // Better performance on Safari
-            willReadFrequently: false
-        });
+        // ✅ PRODUCTION STYLE: Use setTimeout for frame stability (like production's 500ms delay)
+        setTimeout(() => {
+            try {
+                console.log(`Safari: Drawing frame at ${segment.time}s for ${segment.title}`);
 
-        // Set canvas size
-        const videoWidth = masterVideoElement.videoWidth;
-        const videoHeight = masterVideoElement.videoHeight;
-        canvas.width = videoWidth;
-        canvas.height = videoHeight;
+                // Create canvas with production app's approach
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
 
-        console.log(`Safari: Capturing frame at ${videoWidth}x${videoHeight} for time ${segment.time}s`);
+                // Production app scaling
+                const scale = 0.8;
+                const videoWidth = masterVideoElement.videoWidth;
+                const videoHeight = masterVideoElement.videoHeight;
+                const width = Math.floor(videoWidth * scale);
+                const height = Math.floor(videoHeight * scale);
 
-        try {
-            // Draw current video frame to canvas
-            ctx.drawImage(masterVideoElement, 0, 0, videoWidth, videoHeight);
+                canvas.width = width;
+                canvas.height = height;
 
-            // Safari-specific: Check if canvas has valid content
-            const imageData = ctx.getImageData(0, 0, Math.min(100, videoWidth), Math.min(100, videoHeight));
-            const pixels = imageData.data;
-            let hasContent = false;
+                // Clear and draw (production app pattern)
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(masterVideoElement, 0, 0, width, height);
 
-            // Check first 100x100 pixels for any non-black content
-            for (let i = 0; i < pixels.length; i += 4) {
-                if (pixels[i] > 20 || pixels[i + 1] > 20 || pixels[i + 2] > 20) {
-                    hasContent = true;
-                    break;
-                }
+                // Create frame container
+                const frameContainer = document.createElement('div');
+                frameContainer.className = 'image-frame';
+
+                // Style canvas
+                canvas.style.cssText = `
+                    max-width: 100%; 
+                    max-height: 100%; 
+                    border-radius: 12px;
+                    display: block;
+                    margin: 0 auto;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    background: #000;
+                `;
+
+                frameContainer.appendChild(canvas);
+
+                // Replace placeholder
+                placeholder.parentNode.replaceChild(frameContainer, placeholder);
+
+                console.log(`✅ Production-style frame capture complete for ${segment.title}`);
+
+            } catch (drawError) {
+                console.error('Error during canvas drawing:', drawError);
+                showImageErrorSafari(slideId, 'Canvas drawing failed');
             }
-
-            if (!hasContent) {
-                console.warn('Safari: Captured frame appears empty, retrying...');
-                if (retryCount < 3) {
-                    setTimeout(() => {
-                        captureVideoFrameSafari(slideId, segment, retryCount + 1);
-                    }, 800);
-                    return;
-                }
-                // Continue anyway if max retries reached
-                console.warn('Safari: Using potentially empty frame after max retries');
-            }
-
-        } catch (drawError) {
-            console.error('Safari: Error drawing to canvas:', drawError);
-            if (retryCount < 3) {
-                setTimeout(() => {
-                    captureVideoFrameSafari(slideId, segment, retryCount + 1);
-                }, 1000);
-                return;
-            }
-            showImageErrorSafari(slideId, 'Canvas drawing failed');
-            return;
-        }
-
-        // Create image frame container
-        const frameContainer = document.createElement('div');
-        frameContainer.className = 'image-frame';
-
-        // Safari-compatible canvas styling
-        const displayCanvas = document.createElement('canvas');
-        displayCanvas.width = videoWidth;
-        displayCanvas.height = videoHeight;
-        displayCanvas.style.cssText = `
-            max-width: 100%; 
-            max-height: 100%; 
-            border-radius: 12px;
-            display: block;
-            margin: 0 auto;
-        `;
-
-        // Copy canvas content
-        const displayCtx = displayCanvas.getContext('2d', { alpha: false });
-        displayCtx.drawImage(canvas, 0, 0);
-
-        frameContainer.appendChild(displayCanvas);
-
-        // Replace placeholder with image frame
-        placeholder.parentNode.replaceChild(frameContainer, placeholder);
-
-        console.log(`✅ Safari: Video frame captured successfully for ${segment.title} at ${segment.time}s`);
-        // Clean up canvas memory for iPad Safari
-        canvas.width = 0;
-        canvas.height = 0;
-        canvas = null;
+        }, 300); // Production app uses 500ms, we use 300ms for faster response
 
     } catch (error) {
         sendErrorToiOS(error, 'from-video-slides.js', 0, 0, error.stack);
-        console.error('Safari: Error in performSafariFrameCapture:', error);
+        console.error('Safari: Error in frame capture with loading:', error);
         if (retryCount < 3) {
             setTimeout(() => {
                 captureVideoFrameSafari(slideId, segment, retryCount + 1);
