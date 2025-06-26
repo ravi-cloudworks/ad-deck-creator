@@ -42,20 +42,70 @@ const sampleData = {
 // Initialize the presentation
 function init() {
     console.log('\n🏁 STARTING main init()');
-    
+
     // Wait for DOM to be fully ready
     setTimeout(() => {
         console.log('🔧 Starting main initialization');
         try {
             // ✅ NEW: Check if we have JSON data first
+
             const editorTextarea = document.getElementById('editor');
+            if (editorTextarea && !editorTextarea.value.trim()) {
+                editorTextarea.value = `{
+  "front-cover": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/prompt_title_page/9223372036834525189/9223372035104551163_frontcoverpage_1750224615.png",
+  "last-cover": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/prompt_last_page/9223372036834525189/9223372035104551162_lastcoverpage_1750224626.png",
+  "background": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/background_image/DeckBackground.png",
+  "video-source": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/campaign_video/9223372036834525195/9223372035105057290_SampleAdV1.mp4",
+  "video-ads": "ad-0s-15s_img-16s-30s_img-31s_ad-32s-60s",
+  "campaign-id": "1003_0107BA97A8261750670645",
+  "max_page_length": 20,
+  "pricing_per_page_in_dollars": 1,
+  "products": [
+    {
+      "id": "enable_video",
+      "name": "Strategy Video",
+      "description": "Professional video content for brand positioning and audit services with AI-generated voiceover and strategic insights",
+      "usecase": "Brand Positioning Services, Brand Audit Services, Client Presentations",
+      "credits": 2,
+      "value": false
+    },
+    {
+      "id": "enable_share_code",
+      "name": "Strategy Resellable Code",
+      "description": "Shareable strategy implementation codes for white-label services and personal branding opportunities",
+      "usecase": "Strategy Implementation Services, Personal Branding Services, Affiliate Marketing",
+      "credits": 1,
+      "value": false,
+      "max_share_code": 10,
+      "share_code_count": 1
+    },
+    {
+      "id": "enable_mini_deck",
+      "name": "Strategy Power Deck",
+      "description": "Condensed 5-slide executive summary presentation perfect for quick pitches and social media content",
+      "usecase": "Executive Briefings, Social Media Content, Quick Client Pitches",
+      "credits": 1,
+      "value": false
+    }
+  ]
+}`;
+                console.log('✅ Default JSON loaded for testing');
+            }
+
+
+
+
+
+
+
+
             const hasJsonData = editorTextarea && editorTextarea.value.trim();
-            
+
             console.log('JSON data check:', {
                 hasJsonData: !!hasJsonData,
                 jsonLength: hasJsonData ? editorTextarea.value.length : 0
             });
-            
+
             // ✅ FIXED: Only create default chart slide if NO JSON data exists
             if (!hasJsonData) {
                 console.log('📊 No JSON data found, creating default chart slide');
@@ -66,16 +116,16 @@ function init() {
             } else {
                 console.log('🎬 JSON data found, video-slides.js will handle slide creation');
             }
-            
+
             // Add event listeners for iPad interface (with safety checks)
             const bgUpload = document.getElementById('bgUpload');
             if (bgUpload) {
                 bgUpload.addEventListener('change', handleBackgroundUpload);
             }
-            
+
             const autoTextColor = document.getElementById('autoTextColor');
             if (autoTextColor) {
-                autoTextColor.addEventListener('change', function() {
+                autoTextColor.addEventListener('change', function () {
                     const manualBtn = document.getElementById('manualTextBtn');
                     if (manualBtn) {
                         manualBtn.disabled = this.checked;
@@ -83,17 +133,17 @@ function init() {
                     updateChart();
                 });
             }
-            
+
             // Setup drag and drop for slide container
             setupDragAndDrop();
             console.log('✅ Main initialization complete');
-            
+
             // Debug slide state after main init
             setTimeout(() => {
                 debugSlideState('AFTER main init completion');
             }, 50);
-            
-        } catch (error) { 
+
+        } catch (error) {
             sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
             console.error('❌ Error during main initialization:', error);
         }
@@ -105,13 +155,13 @@ function getCurrentSlideColors() {
     if (!currentSlide) {
         return themeColors.custom;
     }
-    
+
     // If slide doesn't have its own colors, initialize them
     if (!currentSlide.colors) {
         currentSlide.colors = [...themeColors.custom]; // Create a copy
         console.log('Initialized colors for slide:', currentSlide.title);
     }
-    
+
     return currentSlide.colors;
 }
 
@@ -133,16 +183,16 @@ function updateColorPicker() {
 
         const seriesCount = data.series.length;
         const slideColors = getCurrentSlideColors();
-        
+
         const colorPalette = document.querySelector('.color-palette-touch');
         if (!colorPalette) return;
 
         // Show color palette for chart slides
         colorPalette.style.display = 'flex';
-        
+
         // Clear existing dots
         colorPalette.innerHTML = '';
-        
+
         // Generate dots only for actual data series
         for (let i = 0; i < seriesCount; i++) {
             const colorDot = document.createElement('div');
@@ -150,12 +200,12 @@ function updateColorPicker() {
             colorDot.id = `custom-color-${i + 1}`;
             colorDot.style.background = slideColors[i] || themeColors.custom[i];
             colorDot.onclick = () => openTouchColorPicker(i);
-            
+
             colorPalette.appendChild(colorDot);
         }
-        
+
         console.log(`Updated color picker: ${seriesCount} colors for ${chartType} chart`);
-        
+
     } catch (error) {
         sendErrorToiOS(error, 'from-script.js-colorpicker', 0, 0, error.stack);
         console.error('Error updating color picker:', error);
@@ -170,12 +220,12 @@ function toggleCustomizeMode() {
         console.log('Customize disabled for cover slides');
         return; // Don't allow customize mode for cover slides
     }
-    
+
     isCustomizeMode = !isCustomizeMode;
     const slideContainer = document.getElementById('slideContainer');
     const controlPanel = document.getElementById('controlPanel');
     const customizeBtn = document.getElementById('customizeBtn');
-    
+
     if (slideContainer && controlPanel && customizeBtn) {
         if (isCustomizeMode) {
             slideContainer.classList.add('customize-mode');
@@ -186,7 +236,7 @@ function toggleCustomizeMode() {
             controlPanel.classList.remove('open');
             customizeBtn.innerHTML = '⚙️ Customize';
         }
-        
+
         // Trigger chart resize after animation
         setTimeout(() => {
             if (chartInstance) {
@@ -207,7 +257,7 @@ function selectChartType(type) {
         if (activeBtn) {
             activeBtn.classList.add('active');
         }
-        
+
         // Update slide data and chart
         if (slides[currentSlideIndex]) {
             slides[currentSlideIndex].chartType = type;
@@ -215,7 +265,8 @@ function selectChartType(type) {
             generateDataSliders(); // Generate sliders for new chart type
             updateColorPicker(); // ADD THIS LINE
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in selectChartType:', error);
     }
 }
@@ -237,7 +288,8 @@ function getCurrentTextColor() {
         } else {
             return slides[currentSlideIndex]?.customTextColor || '#333333';
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error getting text color:', error);
         return '#333333';
     }
@@ -249,12 +301,13 @@ function openTouchColorPicker(colorIndex) {
         currentColorPickerIndex = colorIndex;
         const modal = document.getElementById('colorPickerModal');
         const colorPicker = document.getElementById('touchColorPicker');
-        
+
         if (modal && colorPicker) {
             colorPicker.value = themeColors.custom[colorIndex];
             modal.style.display = 'flex';
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error opening color picker:', error);
     }
 }
@@ -265,7 +318,8 @@ function selectPresetColor(color) {
         if (colorPicker) {
             colorPicker.value = color;
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error selecting preset color:', error);
     }
 }
@@ -274,15 +328,15 @@ function applySelectedColor() {
     try {
         const colorPicker = document.getElementById('touchColorPicker');
         if (!colorPicker) return;
-        
+
         const color = colorPicker.value;
         const currentSlide = slides[currentSlideIndex];
-        
+
         if (!currentSlide) {
             console.warn('No current slide found for color application');
             return;
         }
-        
+
         if (currentColorPickerIndex === -1) {
             // This is for text color
             currentSlide.customTextColor = color;
@@ -290,24 +344,25 @@ function applySelectedColor() {
         } else if (currentColorPickerIndex >= 0) {
             // This is for theme colors
             const slideColors = getCurrentSlideColors(); // This will initialize if needed
-            
+
             // Update the specific color for this slide only
             slideColors[currentColorPickerIndex] = color;
-            
+
             // Update the color dot display
             const colorDot = document.getElementById(`custom-color-${currentColorPickerIndex + 1}`);
             if (colorDot) {
                 colorDot.style.background = color;
             }
-            
+
             // Update the chart with the new colors
             updateChart();
-            
+
             console.log(`Updated color ${currentColorPickerIndex} to ${color} for slide:`, currentSlide.title);
         }
-        
+
         closeColorPicker();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error applying color:', error);
     }
 }
@@ -317,17 +372,18 @@ function closeColorPicker() {
         const modal = document.getElementById('colorPickerModal');
         if (modal) {
             modal.style.display = 'none';
-            
+
             // Reset modal title back to default
             const modalTitle = modal.querySelector('h3');
             if (modalTitle) {
                 modalTitle.textContent = 'Choose Color';
             }
-            
+
             // Reset color picker index
             currentColorPickerIndex = -1;
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error closing color picker:', error);
     }
 }
@@ -338,20 +394,21 @@ function openTextColorPicker() {
         currentColorPickerIndex = -1; // Special flag for text color
         const modal = document.getElementById('colorPickerModal');
         const colorPicker = document.getElementById('touchColorPicker');
-        
+
         if (modal && colorPicker) {
             // Set current text color or default
             const currentTextColor = slides[currentSlideIndex]?.customTextColor || '#333333';
             colorPicker.value = currentTextColor;
             modal.style.display = 'flex';
-            
+
             // Update the modal title for text color
             const modalTitle = modal.querySelector('h3');
             if (modalTitle) {
                 modalTitle.textContent = 'Choose Text Color';
             }
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error opening text color picker:', error);
     }
 }
@@ -360,7 +417,7 @@ function addChartSlide() {
     try {
         console.log('\n➕ STARTING addChartSlide()');
         debugSlideState('BEFORE adding chart slide');
-        
+
         const slideId = `slide-${Date.now()}`;
         const slide = {
             id: slideId,
@@ -371,10 +428,10 @@ function addChartSlide() {
             customTextColor: null,
             colors: [...themeColors.custom]
         };
-        
+
         // Find if there's a back cover slide
         const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
-        
+
         let insertIndex;
         if (backCoverIndex !== -1) {
             // Insert before back cover
@@ -387,9 +444,9 @@ function addChartSlide() {
             slides.push(slide);
             console.log('📊 Chart slide added at end, index:', insertIndex);
         }
-        
+
         console.log('📊 Chart slide data created:', slide);
-        
+
         // Create slide element
         const slideElement = document.createElement('div');
         slideElement.className = 'slide';
@@ -402,7 +459,7 @@ function addChartSlide() {
                 </div>
             </div>
         `;
-        
+
         // Apply global background if exists
         if (globalBackgroundImage) {
             slideElement.style.backgroundImage = `url(${globalBackgroundImage})`;
@@ -410,7 +467,7 @@ function addChartSlide() {
             slideElement.style.backgroundPosition = 'center';
             slideElement.style.backgroundRepeat = 'no-repeat';
         }
-        
+
         const slideContainer = document.getElementById('slideContainer');
         if (slideContainer) {
             // Insert at the correct DOM position
@@ -422,13 +479,13 @@ function addChartSlide() {
                 // Add at end
                 slideContainer.appendChild(slideElement);
             }
-            
+
             console.log('📊 Chart slide element added to DOM at correct position');
-            
+
             // Switch to new slide
             currentSlideIndex = insertIndex;
             console.log('📊 Current slide index set to:', currentSlideIndex);
-            
+
             // Use setTimeout to ensure DOM is updated
             setTimeout(() => {
                 console.log('📊 Calling showSlide from addChartSlide');
@@ -436,7 +493,7 @@ function addChartSlide() {
                 updateSlideList();
                 updateNavigation();
                 updateChart();
-                
+
                 debugSlideState('AFTER adding chart slide');
             }, 100);
         } else {
@@ -448,10 +505,11 @@ function addChartSlide() {
                 slides.pop();
             }
         }
-        
+
         console.log('✅ COMPLETED addChartSlide()');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addChartSlide:', error);
     }
 }
@@ -459,13 +517,13 @@ function addChartSlide() {
 function addVideoSlide() {
     try {
         console.log('\n🎬 STARTING addVideoSlide()');
-        
+
         // Check if video is loaded
         if (!masterVideoElement || !masterVideoElement.duration) {
             showshowAlert('Please load a video first to create video slides.');
             return;
         }
-        
+
         // Create default video segment (first 5 seconds)
         const defaultSegment = {
             type: 'video',
@@ -476,33 +534,34 @@ function addVideoSlide() {
             originalSegment: `custom-0s-${Math.min(5, masterVideoElement.duration)}s`,
             campaignName: 'Custom'
         };
-        
+
         console.log('Creating video slide with default segment:', defaultSegment);
-        
+
         // Find insertion position (before back cover if exists)
         const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
         let insertIndex = backCoverIndex !== -1 ? backCoverIndex : slides.length;
-        
+
         // Create the slide using existing function
         createSlideFromSegmentFixed(defaultSegment, insertIndex);
-        
+
         // Update UI
         updateSlideList();
         updateNavigation();
-        
+
         // Switch to new slide
         currentSlideIndex = insertIndex;
         showSlide(currentSlideIndex);
-        
+
         // Switch to customize mode and video tab
         setTimeout(() => {
             toggleCustomizeMode(); // Open customize panel
             switchTab('video'); // Switch to video tab
         }, 200);
-        
+
         console.log('✅ Video slide created and customize panel opened');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addVideoSlide:', error);
     }
 }
@@ -510,13 +569,13 @@ function addVideoSlide() {
 function addImageSlide() {
     try {
         console.log('\n🖼️ STARTING addImageSlide()');
-        
+
         // Check if video is loaded
         if (!masterVideoElement || !masterVideoElement.duration) {
             showshowAlert('Please load a video first to create image slides.');
             return;
         }
-        
+
         // Create default image segment (at 0 seconds)
         const defaultSegment = {
             type: 'image',
@@ -525,33 +584,34 @@ function addImageSlide() {
             originalSegment: `custom-img-0s`,
             campaignName: 'Custom'
         };
-        
+
         console.log('Creating image slide with default segment:', defaultSegment);
-        
+
         // Find insertion position (before back cover if exists)
         const backCoverIndex = slides.findIndex(s => s.isCoverSlide && s.coverPosition === 'back');
         let insertIndex = backCoverIndex !== -1 ? backCoverIndex : slides.length;
-        
+
         // Create the slide using existing function
         createSlideFromSegmentFixed(defaultSegment, insertIndex);
-        
+
         // Update UI
         updateSlideList();
         updateNavigation();
-        
+
         // Switch to new slide
         currentSlideIndex = insertIndex;
         showSlide(currentSlideIndex);
-        
+
         // Switch to customize mode and video tab
         setTimeout(() => {
             toggleCustomizeMode(); // Open customize panel
             switchTab('video'); // Switch to video tab
         }, 200);
-        
+
         console.log('✅ Image slide created and customize panel opened');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error in addImageSlide:', error);
     }
 }
@@ -564,7 +624,7 @@ function debugSlideState(location) {
     console.log(`\n=== SLIDE DEBUG: ${location} ===`);
     console.log('Total slides:', slides.length);
     console.log('Current slide index:', currentSlideIndex);
-    
+
     slides.forEach((slide, index) => {
         console.log(`Slide ${index}:`, {
             id: slide.id,
@@ -575,7 +635,7 @@ function debugSlideState(location) {
             coverPosition: slide.coverPosition || 'n/a'
         });
     });
-    
+
     // Check DOM elements
     const slideElements = document.querySelectorAll('.slide');
     console.log('DOM slide elements:', slideElements.length);
@@ -595,22 +655,23 @@ function deleteSlide() {
             showAlert('Cannot delete the last slide!');
             return;
         }
-        
+
         const slideToRemove = document.getElementById(slides[currentSlideIndex].id);
         if (slideToRemove) {
             slideToRemove.remove();
         }
-        
+
         slides.splice(currentSlideIndex, 1);
-        
+
         if (currentSlideIndex >= slides.length) {
             currentSlideIndex = slides.length - 1;
         }
-        
+
         showSlide(currentSlideIndex);
         updateSlideList();
         updateNavigation();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in deleteSlide:', error);
     }
 }
@@ -624,7 +685,7 @@ function showSlide(index) {
 
         const earnCashBtn = document.getElementById('earnCashBtn');
         const slideToShow = slides[index];
-        
+
         if (earnCashBtn && slideToShow) {
             if (slideToShow.isCoverSlide) {
                 earnCashBtn.style.display = 'block';
@@ -645,23 +706,23 @@ function showSlide(index) {
                 customizeBtn.style.visibility = 'visible';
             }
         }
-        
-        
+
+
         // Validate index and slides array
         if (index < 0 || index >= slides.length || !slides[index]) {
             console.error('Invalid slide index or slide not found:', index);
             return;
         }
-        
+
         // Hide all slides
         document.querySelectorAll('.slide').forEach(slide => {
             slide.classList.remove('active');
         });
-        
+
         // Show current slide
         const currentSlide = slides[index];
         console.log('Current slide:', currentSlide);
-        
+
         const slideElement = document.getElementById(currentSlide.id);
         if (slideElement) {
             slideElement.classList.add('active');
@@ -669,7 +730,7 @@ function showSlide(index) {
         } else {
             console.error('Slide element not found:', currentSlide.id);
         }
-        
+
         // Update chart type buttons (only if they exist)
         const typeButtons = document.querySelectorAll('.type-btn');
         if (typeButtons.length > 0) {
@@ -681,7 +742,7 @@ function showSlide(index) {
                 activeTypeBtn.classList.add('active');
             }
         }
-        
+
         // SAFER: Update color dots only for chart slides
         try {
             if (currentSlide && !currentSlide.isCoverSlide && !currentSlide.isVideoSlide) {
@@ -692,7 +753,7 @@ function showSlide(index) {
             console.warn('Error updating color dots:', colorError);
             // Don't fail the entire function if color update fails
         }
-        
+
         // Update counter (safely)
         const currentSlideSpan = document.getElementById('currentSlide');
         const totalSlidesSpan = document.getElementById('totalSlides');
@@ -702,19 +763,20 @@ function showSlide(index) {
         if (totalSlidesSpan) {
             totalSlidesSpan.textContent = slides.length;
         }
-        
+
         // Update tabs for current slide type (if tab system exists)
         if (typeof updateTabsForCurrentSlide === 'function') {
             updateTabsForCurrentSlide();
         }
-        
+
         console.log('showSlide completed successfully');
-        
+
         // Update chart and generate sliders
         updateChart();
         generateDataSliders();
         updateColorPicker(); // ADD THIS LINE
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in showSlide:', error);
     }
 }
@@ -725,7 +787,7 @@ function updateColorDots(colors) {
             console.warn('Invalid colors array, using default');
             colors = themeColors.custom;
         }
-        
+
         for (let i = 0; i < 5; i++) {
             const colorDot = document.getElementById(`custom-color-${i + 1}`);
             if (colorDot && colors[i]) {
@@ -734,7 +796,8 @@ function updateColorDots(colors) {
         }
         updateColorPicker();
         console.log('updateColorDots called - delegated to updateColorPicker');
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating color dots:', error);
     }
 }
@@ -747,33 +810,33 @@ function updateChart() {
             console.error('No current slide found');
             return;
         }
-        
+
         // Skip chart update for non-chart slides
         if (currentSlide.isCoverSlide || currentSlide.isVideoSlide) {
             console.log('Skipping chart update for non-chart slide');
             return;
         }
-        
+
         const chartType = currentSlide.chartType;
         const chartContainer = document.getElementById(`chart-${currentSlide.id}`);
         if (!chartContainer) {
             console.error('Chart container not found:', `chart-${currentSlide.id}`);
             return;
         }
-        
+
         // Dispose previous chart instance
         if (chartInstance) {
             chartInstance.clear();      // ← ADD: Clear chart data
             chartInstance.dispose();
             chartInstance = null;       // ← ADD: Release reference
         }
-        
+
         // Create new chart
         chartInstance = echarts.init(chartContainer);
-        
+
         const data = sampleData[chartType];
         const textColor = getCurrentTextColor();
-        
+
         // SAFER: Get colors with fallback
         let slideColors;
         try {
@@ -782,23 +845,23 @@ function updateChart() {
             console.warn('Error getting slide colors, using default:', colorError);
             slideColors = themeColors.custom;
         }
-        
+
         let option = {};
-        
+
         if (chartType === 'bar') {
             option = {
                 backgroundColor: 'transparent',
-                title: { 
-                    text: data.title, 
+                title: {
+                    text: data.title,
                     left: 'center',
-                    textStyle: { 
+                    textStyle: {
                         color: textColor,
                         fontWeight: 'bold',
                         fontSize: 24
                     }
                 },
                 tooltip: { trigger: 'axis' },
-                legend: { 
+                legend: {
                     top: 'bottom',
                     textStyle: { color: textColor, fontSize: 14 }
                 },
@@ -808,7 +871,7 @@ function updateChart() {
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } }
                 },
-                yAxis: { 
+                yAxis: {
                     type: 'value',
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } },
@@ -829,17 +892,17 @@ function updateChart() {
         } else if (chartType === 'line') {
             option = {
                 backgroundColor: 'transparent',
-                title: { 
-                    text: data.title, 
+                title: {
+                    text: data.title,
                     left: 'center',
-                    textStyle: { 
+                    textStyle: {
                         color: textColor,
                         fontWeight: 'bold',
                         fontSize: 24
                     }
                 },
                 tooltip: { trigger: 'axis' },
-                legend: { 
+                legend: {
                     top: 'bottom',
                     textStyle: { color: textColor, fontSize: 14 }
                 },
@@ -849,7 +912,7 @@ function updateChart() {
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } }
                 },
-                yAxis: { 
+                yAxis: {
                     type: 'value',
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } },
@@ -873,17 +936,17 @@ function updateChart() {
         } else if (chartType === 'stack') {
             option = {
                 backgroundColor: 'transparent',
-                title: { 
-                    text: data.title, 
+                title: {
+                    text: data.title,
                     left: 'center',
-                    textStyle: { 
+                    textStyle: {
                         color: textColor,
                         fontWeight: 'bold',
                         fontSize: 24
                     }
                 },
                 tooltip: { trigger: 'axis' },
-                legend: { 
+                legend: {
                     top: 'bottom',
                     textStyle: { color: textColor, fontSize: 14 }
                 },
@@ -893,7 +956,7 @@ function updateChart() {
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } }
                 },
-                yAxis: { 
+                yAxis: {
                     type: 'value',
                     axisLabel: { color: textColor, fontSize: 12 },
                     axisLine: { lineStyle: { color: textColor } },
@@ -913,15 +976,16 @@ function updateChart() {
                 }))
             };
         }
-        
+
         chartInstance.setOption(option);
         console.log('Chart updated successfully with slide colors');
-        
+
         // Handle resize for customize mode
         if (isCustomizeMode) {
             setTimeout(() => chartInstance.resize(), 100);
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in updateChart:', error);
     }
 }
@@ -932,7 +996,8 @@ function handleBackgroundUpload(event) {
         if (file && file.type.startsWith('image/')) {
             handleBackgroundFile(file);
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error handling background upload:', error);
     }
 }
@@ -940,9 +1005,9 @@ function handleBackgroundUpload(event) {
 function handleBackgroundFile(file) {
     try {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             globalBackgroundImage = e.target.result;
-            
+
             // Apply background to all existing slides EXCEPT cover slides
             slides.forEach(slide => {
                 // Skip cover slides - they keep their own backgrounds
@@ -950,7 +1015,7 @@ function handleBackgroundFile(file) {
                     console.log('Skipping background update for cover slide:', slide.title);
                     return;
                 }
-                
+
                 slide.backgroundImage = globalBackgroundImage;
                 const slideElement = document.getElementById(slide.id);
                 if (slideElement) {
@@ -960,12 +1025,13 @@ function handleBackgroundFile(file) {
                     slideElement.style.backgroundRepeat = 'no-repeat';
                 }
             });
-            
+
             updateSlideList();
             updateChart();
         };
         reader.readAsDataURL(file);
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error handling background file:', error);
     }
 }
@@ -973,24 +1039,25 @@ function handleBackgroundFile(file) {
 function removeBackground() {
     try {
         globalBackgroundImage = null;
-        
+
         slides.forEach(slide => {
             // Skip cover slides - they keep their own backgrounds
             if (slide.isCoverSlide) {
                 console.log('Skipping background removal for cover slide:', slide.title);
                 return;
             }
-            
+
             slide.backgroundImage = null;
             const slideElement = document.getElementById(slide.id);
             if (slideElement) {
                 slideElement.style.backgroundImage = 'none';
             }
         });
-        
+
         updateSlideList();
         updateChart();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing background:', error);
     }
 }
@@ -1017,10 +1084,11 @@ function updateNavigation() {
     try {
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        
+
         if (prevBtn) prevBtn.disabled = currentSlideIndex === 0;
         if (nextBtn) nextBtn.disabled = currentSlideIndex === slides.length - 1;
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating navigation:', error);
     }
 }
@@ -1029,18 +1097,18 @@ function updateSlideList() {
     try {
         const slideList = document.getElementById('slideList');
         if (!slideList) return;
-        
+
         slideList.innerHTML = '';
-        
+
         slides.forEach((slide, index) => {
             const slidePreview = document.createElement('div');
-            
+
             // Add cover-slide class for styling
             const coverClass = slide.isCoverSlide ? ' cover-slide' : '';
             slidePreview.className = `slide-preview${coverClass} ${index === currentSlideIndex ? 'active' : ''}`;
-            
+
             const bgStatus = slide.backgroundImage ? '🖼️' : '';
-            
+
             // Determine slide type for display
             let slideTypeText = 'chart';
             if (slide.isCoverSlide) {
@@ -1048,7 +1116,7 @@ function updateSlideList() {
             } else if (slide.isVideoSlide) {
                 slideTypeText = slide.chartType; // 'video' or 'image'
             }
-            
+
             slidePreview.innerHTML = `
                 <strong>${slide.title} ${bgStatus}</strong>
                 <br>
@@ -1064,7 +1132,7 @@ function updateSlideList() {
                     </div>
                 ` : ''}
             `;
-            
+
             slidePreview.onclick = (e) => {
                 // Only switch slides if user didn't click on reorder buttons
                 if (!e.target.classList.contains('reorder-btn')) {
@@ -1074,10 +1142,11 @@ function updateSlideList() {
                     updateNavigation();
                 }
             };
-            
+
             slideList.appendChild(slidePreview);
         });
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating slide list:', error);
     }
 }
@@ -1086,11 +1155,11 @@ function setupDragAndDrop() {
     try {
         const slideContainer = document.getElementById('slideContainer');
         if (!slideContainer) return;
-        
+
         slideContainer.addEventListener('dragover', (e) => {
             e.preventDefault();
         });
-        
+
         slideContainer.addEventListener('drop', (e) => {
             e.preventDefault();
             const files = e.dataTransfer.files;
@@ -1098,7 +1167,8 @@ function setupDragAndDrop() {
                 handleBackgroundFile(files[0]);
             }
         });
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting up drag and drop:', error);
     }
 }
@@ -1107,11 +1177,11 @@ function setupDragAndDrop() {
 let touchStartX = 0;
 let touchEndX = 0;
 
-document.addEventListener('touchstart', function(e) {
+document.addEventListener('touchstart', function (e) {
     touchStartX = e.changedTouches[0].screenX;
 }, { passive: true });
 
-document.addEventListener('touchend', function(e) {
+document.addEventListener('touchend', function (e) {
     touchEndX = e.changedTouches[0].screenX;
     handleSwipe();
 }, { passive: true });
@@ -1119,7 +1189,7 @@ document.addEventListener('touchend', function(e) {
 function handleSwipe() {
     const swipeThreshold = 50; // Minimum distance for a swipe
     const swipeDistance = touchEndX - touchStartX;
-    
+
     if (Math.abs(swipeDistance) > swipeThreshold) {
         if (swipeDistance > 0) {
             // Swipe right - go to previous slide
@@ -1142,21 +1212,21 @@ document.addEventListener('keydown', (e) => {
 function generateDataSliders() {
     const currentSlide = slides[currentSlideIndex];
     if (!currentSlide) return;
-    
+
     const dataContainer = document.getElementById('dataControls');
     if (!dataContainer) return;
-    
+
     const chartType = currentSlide.chartType;
     const data = sampleData[chartType];
-    
+
     dataContainer.innerHTML = '';
-    
+
     // Show/hide series buttons based on chart type
     const seriesButtons = document.getElementById('seriesButtons');
     if (seriesButtons) {
         seriesButtons.style.display = (chartType === 'line' || chartType === 'stack') ? 'flex' : 'none';
     }
-    
+
     if (chartType === 'bar') {
         // Single series bar chart
         data.xAxis.forEach((label, index) => {
@@ -1210,16 +1280,16 @@ function addDataPoint() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // Limit to max 12 data points
         if (data.xAxis.length >= 12) {
             showshowAlert('Maximum 12 time periods allowed');
             return;
         }
-        
+
         // Generate new label based on chart type
         let newLabel;
         if (data.xAxis[0] && data.xAxis[0].includes('Q')) {
@@ -1234,19 +1304,20 @@ function addDataPoint() {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             newLabel = months[data.xAxis.length % 12];
         }
-        
+
         // Add new label
         data.xAxis.push(newLabel);
-        
+
         // Add new data point to each series
         data.series.forEach(series => {
             const avgValue = series.data.reduce((a, b) => a + b, 0) / series.data.length;
             series.data.push(Math.round(avgValue));
         });
-        
+
         updateChart();
         generateDataSliders();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error adding data point:', error);
     }
 }
@@ -1256,28 +1327,29 @@ function removeDataPoint() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // Minimum 2 data points
         if (data.xAxis.length <= 2) {
             showshowAlert('Minimum 2 time periods required');
             return;
         }
-        
+
         // Remove last data point
         data.xAxis.pop();
         data.series.forEach(series => {
             series.data.pop();
         });
-        
+
         updateChart();
         generateDataSliders(); // This already exists - good!
-        
+
         // ADD THIS: Update button states
         updateDataManagementButtons();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing data point:', error);
     }
 }
@@ -1287,45 +1359,46 @@ function addSeries() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // Limit to max 6 series
         if (data.series.length >= 6) {
             showshowAlert('Maximum 6 data series allowed');
             return;
         }
-        
+
         // Generate new series name and data
         const seriesNames = {
             line: ['Traffic', 'Conversions', 'Bounces', 'Sessions', 'Users'],
             stack: ['Mobile', 'Desktop', 'Tablet', 'Smart TV', 'Others']
         };
-        
+
         const newName = seriesNames[chartType][data.series.length - 1] || `Series ${data.series.length + 1}`;
-        
+
         // Generate random data based on existing values
         const newData = data.xAxis.map(() => {
             const baseValue = chartType === 'line' ? 1000 : 200;
             return Math.round(baseValue + Math.random() * baseValue);
         });
-        
+
         const newSeries = {
             name: newName,
             data: newData
         };
-        
+
         if (chartType === 'stack') {
             newSeries.stack = 'total';
         }
-        
+
         data.series.push(newSeries);
-        
+
         updateChart();
         generateDataSliders();
         updateDataManagementButtons();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error adding series:', error);
     }
 }
@@ -1335,23 +1408,24 @@ function removeSeries() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // Minimum 1 series
         if (data.series.length <= 1) {
             showshowAlert('Minimum 1 data series required');
             return;
         }
-        
+
         // Remove last series
         data.series.pop();
-        
+
         updateChart();
         generateDataSliders();
         updateDataManagementButtons();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error removing series:', error);
     }
 }
@@ -1360,26 +1434,26 @@ function updateDataManagementButtons() {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // Update period buttons
         const removeDataBtn = document.querySelector('.data-btn[onclick="removeDataPoint()"]');
         const addDataBtn = document.querySelector('.data-btn[onclick="addDataPoint()"]');
-        
+
         if (removeDataBtn) {
             removeDataBtn.disabled = data.xAxis.length <= 2;
         }
         if (addDataBtn) {
             addDataBtn.disabled = data.xAxis.length >= 12;
         }
-        
+
         // Update series buttons (for line and stack charts)
         if (chartType === 'line' || chartType === 'stack') {
             const removeSeriesBtn = document.querySelector('.data-btn[onclick="removeSeries()"]');
             const addSeriesBtn = document.querySelector('.data-btn[onclick="addSeries()"]');
-            
+
             if (removeSeriesBtn) {
                 removeSeriesBtn.disabled = data.series.length <= 1;
             }
@@ -1387,8 +1461,9 @@ function updateDataManagementButtons() {
                 addSeriesBtn.disabled = data.series.length >= 6;
             }
         }
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating data management buttons:', error);
     }
 }
@@ -1397,25 +1472,26 @@ function updateDataManagementButtons() {
 function updateDataValue(chartType, seriesIndex, dataIndex, newValue) {
     try {
         const value = parseInt(newValue);
-        
+
         // ADD THIS: Validate indices exist
         const data = sampleData[chartType];
         if (!data.series[seriesIndex] || !data.series[seriesIndex].data[dataIndex] === undefined) {
             console.warn('Invalid data indices:', seriesIndex, dataIndex);
             return;
         }
-        
+
         sampleData[chartType].series[seriesIndex].data[dataIndex] = value;
-        
+
         // Update display value
         const valueDisplay = document.getElementById(`value-${chartType}-${seriesIndex}-${dataIndex}`);
         if (valueDisplay) {
             valueDisplay.textContent = value;
         }
-        
+
         // Update chart
         updateChart();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating data value:', error);
     }
 }
@@ -1425,15 +1501,15 @@ function setTitle(newTitle) {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         sampleData[chartType].title = newTitle;
-        
+
         // Update button appearance - safely check if event exists
         document.querySelectorAll('.title-templates .template-btn').forEach(btn => {
             btn.classList.remove('selected');
         });
-        
+
         // Only try to access event.target if we're in a button click context
         try {
             if (window.event && window.event.target && window.event.target.classList) {
@@ -1442,10 +1518,11 @@ function setTitle(newTitle) {
         } catch (e) {
             // Ignore - this just means we're not in a button click context
         }
-        
+
         // Immediately update chart
         updateChart();
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting title:', error);
     }
 }
@@ -1455,16 +1532,16 @@ function setSeriesLabels(labels) {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         labels.forEach((label, index) => {
             if (data.series[index]) {
                 data.series[index].name = label;
             }
         });
-        
+
         // Update button appearance - safely handle event and capture target
         let targetElement = null;
         try {
@@ -1475,7 +1552,7 @@ function setSeriesLabels(labels) {
         } catch (e) {
             // Ignore - this just means we're not in a button click context
         }
-        
+
         // Remove selected class after delay, but only if we captured a target
         if (targetElement) {
             setTimeout(() => {
@@ -1486,10 +1563,11 @@ function setSeriesLabels(labels) {
                 }
             }, 1000);
         }
-        
+
         updateChart();
         generateDataSliders(); // Refresh sliders with new labels
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting series labels:', error);
     }
 }
@@ -1499,16 +1577,16 @@ function setTimeLabels(labels) {
     try {
         const currentSlide = slides[currentSlideIndex];
         if (!currentSlide) return;
-        
+
         const chartType = currentSlide.chartType;
         const data = sampleData[chartType];
-        
+
         // BETTER UX: Keep current number of bars, just update labels appropriately
         const currentBarCount = data.xAxis.length;
-        
+
         // Take only the number of labels we need (don't force template's full length)
         const appropriateLabels = labels.slice(0, currentBarCount);
-        
+
         // If template has fewer labels than current bars, cycle through them
         if (appropriateLabels.length < currentBarCount) {
             while (appropriateLabels.length < currentBarCount) {
@@ -1517,12 +1595,12 @@ function setTimeLabels(labels) {
                 appropriateLabels.push(`${baseLabel} ${cycleNumber}`);
             }
         }
-        
+
         // Update xAxis with appropriate number of labels
         data.xAxis = [...appropriateLabels];
-        
+
         console.log(`Smart template applied: ${currentBarCount} bars kept, labels updated to:`, data.xAxis);
-        
+
         // Update button appearance - safely handle event and capture target
         let targetElement = null;
         try {
@@ -1533,7 +1611,7 @@ function setTimeLabels(labels) {
         } catch (e) {
             // Ignore - this just means we're not in a button click context
         }
-        
+
         // Remove selected class after delay, but only if we captured a target
         if (targetElement) {
             setTimeout(() => {
@@ -1544,10 +1622,10 @@ function setTimeLabels(labels) {
                 }
             }, 1000);
         }
-        
+
         updateChart();
         generateDataSliders(); // Refresh sliders with new labels
-        
+
     } catch (error) {
         sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting time labels:', error);
@@ -1558,38 +1636,39 @@ function setTimeLabels(labels) {
 function startVoiceInput(type) {
     try {
         const statusElement = document.getElementById(`${type}VoiceStatus`);
-        
+
         if ('webkitSpeechRecognition' in window) {
             const recognition = new webkitSpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'en-US';
-            
+
             if (statusElement) statusElement.textContent = 'Listening...';
-            
-            recognition.onresult = function(event) {
+
+            recognition.onresult = function (event) {
                 const transcript = event.results[0][0].transcript;
                 if (type === 'title') {
                     setTitle(transcript);
                 }
                 if (statusElement) statusElement.textContent = `Got: "${transcript}"`;
             };
-            
-            recognition.onerror = function(event) {
+
+            recognition.onerror = function (event) {
                 if (statusElement) statusElement.textContent = 'Voice input failed';
             };
-            
-            recognition.onend = function() {
+
+            recognition.onend = function () {
                 setTimeout(() => {
                     if (statusElement) statusElement.textContent = '';
                 }, 3000);
             };
-            
+
             recognition.start();
         } else {
             if (statusElement) statusElement.textContent = 'Voice input not supported';
         }
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error with voice input:', error);
     }
 }
@@ -1600,7 +1679,7 @@ function startVoiceInput(type) {
 function canMoveSlideUp(index) {
     // Check if there's a non-cover slide above this one
     if (slides[index].isCoverSlide) return false;
-    
+
     for (let i = index - 1; i >= 0; i--) {
         if (!slides[i].isCoverSlide) return true;
     }
@@ -1610,7 +1689,7 @@ function canMoveSlideUp(index) {
 function canMoveSlideDown(index) {
     // Check if there's a non-cover slide below this one
     if (slides[index].isCoverSlide) return false;
-    
+
     for (let i = index + 1; i < slides.length; i++) {
         if (!slides[i].isCoverSlide) return true;
     }
@@ -1620,13 +1699,13 @@ function canMoveSlideDown(index) {
 function moveSlideUp(index) {
     try {
         console.log('🔼 Moving slide up from index:', index);
-        
+
         // Don't move cover slides
         if (slides[index].isCoverSlide) {
             console.log('Cannot move cover slide');
             return;
         }
-        
+
         // Find the previous non-cover slide
         let targetIndex = -1;
         for (let i = index - 1; i >= 0; i--) {
@@ -1635,18 +1714,19 @@ function moveSlideUp(index) {
                 break;
             }
         }
-        
+
         if (targetIndex === -1) {
             console.log('Already at the top of moveable slides');
             return;
         }
-        
+
         // Swap the slides
         swapSlides(index, targetIndex);
-        
+
         console.log('✅ Moved slide up successfully');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error moving slide up:', error);
     }
 }
@@ -1654,13 +1734,13 @@ function moveSlideUp(index) {
 function moveSlideDown(index) {
     try {
         console.log('🔽 Moving slide down from index:', index);
-        
+
         // Don't move cover slides
         if (slides[index].isCoverSlide) {
             console.log('Cannot move cover slide');
             return;
         }
-        
+
         // Find the next non-cover slide
         let targetIndex = -1;
         for (let i = index + 1; i < slides.length; i++) {
@@ -1669,18 +1749,19 @@ function moveSlideDown(index) {
                 break;
             }
         }
-        
+
         if (targetIndex === -1) {
             console.log('Already at the bottom of moveable slides');
             return;
         }
-        
+
         // Swap the slides
         swapSlides(index, targetIndex);
-        
+
         console.log('✅ Moved slide down successfully');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error moving slide down:', error);
     }
 }
@@ -1688,28 +1769,28 @@ function moveSlideDown(index) {
 function swapSlides(index1, index2) {
     try {
         console.log('🔄 Swapping slides:', index1, '↔️', index2);
-        
+
         // Remember current slide
         const wasCurrentSlide1 = (currentSlideIndex === index1);
         const wasCurrentSlide2 = (currentSlideIndex === index2);
-        
+
         // Swap in slides array
         const temp = slides[index1];
         slides[index1] = slides[index2];
         slides[index2] = temp;
-        
+
         // Update current slide index if needed
         if (wasCurrentSlide1) {
             currentSlideIndex = index2;
         } else if (wasCurrentSlide2) {
             currentSlideIndex = index1;
         }
-        
+
         // Swap DOM elements
         const slideContainer = document.getElementById('slideContainer');
         const element1 = document.getElementById(slides[index1].id);
         const element2 = document.getElementById(slides[index2].id);
-        
+
         if (element1 && element2 && slideContainer) {
             // Create temporary placeholder
             const placeholder = document.createElement('div');
@@ -1718,14 +1799,15 @@ function swapSlides(index1, index2) {
             slideContainer.insertBefore(element2, placeholder);
             slideContainer.removeChild(placeholder);
         }
-        
+
         // Refresh UI
         updateSlideList();
         updateNavigation();
-        
+
         console.log('✅ Slide swap completed');
-        
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('❌ Error swapping slides:', error);
     }
 }
@@ -1737,7 +1819,7 @@ function showshowAlert(message) {
     toast.className = 'custom-alert';
     toast.textContent = message;
     document.body.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.remove();
     }, 3000);
@@ -1755,7 +1837,7 @@ function showConfirm(message, callback) {
         </div>
     `;
     document.body.appendChild(modal);
-    
+
     window.confirmCallback = callback;
     window.confirmYes = () => { modal.remove(); callback(true); };
     window.confirmNo = () => { modal.remove(); callback(false); };
@@ -1773,7 +1855,7 @@ function sendErrorToiOS(error, source = 'unknown', line = 0, column = 0, stack =
             userAgent: navigator.userAgent,
             url: window.location.href
         };
-        
+
         // Send to iOS Swift via WebView message
         if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ioserrorlistener) {
             window.webkit.messageHandlers.ioserrorlistener.postMessage(errorData);
@@ -1786,7 +1868,7 @@ function sendErrorToiOS(error, source = 'unknown', line = 0, column = 0, stack =
 }
 
 // Global error event listener (catches unhandled errors)
-window.addEventListener('error', function(event) {
+window.addEventListener('error', function (event) {
     sendErrorToiOS(
         event.error || event.message,
         event.filename || 'unknown',
@@ -1797,7 +1879,7 @@ window.addEventListener('error', function(event) {
 });
 
 // Promise rejection handler (catches unhandled promise rejections)
-window.addEventListener('unhandledrejection', function(event) {
+window.addEventListener('unhandledrejection', function (event) {
     sendErrorToiOS(
         event.reason,
         'promise',
