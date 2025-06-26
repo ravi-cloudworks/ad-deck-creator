@@ -1488,7 +1488,27 @@ function setTimeLabels(labels) {
         if (!currentSlide) return;
         
         const chartType = currentSlide.chartType;
-        sampleData[chartType].xAxis = labels;
+        const data = sampleData[chartType];
+        
+        // BETTER UX: Keep current number of bars, just update labels appropriately
+        const currentBarCount = data.xAxis.length;
+        
+        // Take only the number of labels we need (don't force template's full length)
+        const appropriateLabels = labels.slice(0, currentBarCount);
+        
+        // If template has fewer labels than current bars, cycle through them
+        if (appropriateLabels.length < currentBarCount) {
+            while (appropriateLabels.length < currentBarCount) {
+                const baseLabel = labels[appropriateLabels.length % labels.length];
+                const cycleNumber = Math.floor(appropriateLabels.length / labels.length) + 1;
+                appropriateLabels.push(`${baseLabel} ${cycleNumber}`);
+            }
+        }
+        
+        // Update xAxis with appropriate number of labels
+        data.xAxis = [...appropriateLabels];
+        
+        console.log(`Smart template applied: ${currentBarCount} bars kept, labels updated to:`, data.xAxis);
         
         // Update button appearance - safely handle event and capture target
         let targetElement = null;
@@ -1514,7 +1534,9 @@ function setTimeLabels(labels) {
         
         updateChart();
         generateDataSliders(); // Refresh sliders with new labels
-    } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
+        
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error setting time labels:', error);
     }
 }
