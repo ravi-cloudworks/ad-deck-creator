@@ -29,7 +29,7 @@
             <h2>📊 Customize Presentation</h2>
             <button class="close-btn" onclick="toggleCustomizeMode()">✕</button>
         </div>
-        
+
         <!-- Tab Navigation -->
         <div class="tab-navigation" id="tabNavigation">
             <button class="tab-btn active" id="chartTab" onclick="switchTab('chart')" style="display: none;">
@@ -42,9 +42,9 @@
                 ⚙️ Common
             </button>
         </div>
-        
+
         <div class="control-content">
-            
+
             <!-- Chart Controls Tab -->
             <div class="tab-content active" id="chartTabContent">
                 <div class="control-section">
@@ -83,9 +83,11 @@
                     <label class="control-label">Chart Title:</label>
                     <div class="title-templates">
                         <button class="template-btn" onclick="setTitle('Monthly Sales Data')">📊 Monthly Sales</button>
-                        <button class="template-btn" onclick="setTitle('Quarterly Revenue')">💰 Quarterly Revenue</button>
+                        <button class="template-btn" onclick="setTitle('Quarterly Revenue')">💰 Quarterly
+                            Revenue</button>
                         <button class="template-btn" onclick="setTitle('Website Traffic')">🌐 Website Traffic</button>
-                        <button class="template-btn" onclick="setTitle('Product Performance')">📈 Product Performance</button>
+                        <button class="template-btn" onclick="setTitle('Product Performance')">📈 Product
+                            Performance</button>
                         <button class="template-btn" onclick="setTitle('Market Analysis')">📋 Market Analysis</button>
                         <button class="template-btn" onclick="setTitle('Growth Trends')">📊 Growth Trends</button>
                     </div>
@@ -101,17 +103,26 @@
                         <div class="label-group">
                             <label class="small-label">Series Names:</label>
                             <div class="template-buttons">
-                                <button class="template-btn" onclick="setSeriesLabels(['Sales', 'Revenue', 'Profit'])">💰 Sales/Revenue/Profit</button>
-                                <button class="template-btn" onclick="setSeriesLabels(['Visitors', 'Page Views', 'Conversions'])">🌐 Web Analytics</button>
-                                <button class="template-btn" onclick="setSeriesLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📅 Quarterly</button>
+                                <button class="template-btn"
+                                    onclick="setSeriesLabels(['Sales', 'Revenue', 'Profit'])">💰
+                                    Sales/Revenue/Profit</button>
+                                <button class="template-btn"
+                                    onclick="setSeriesLabels(['Visitors', 'Page Views', 'Conversions'])">🌐 Web
+                                    Analytics</button>
+                                <button class="template-btn" onclick="setSeriesLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📅
+                                    Quarterly</button>
                             </div>
                         </div>
                         <div class="label-group">
                             <label class="small-label">Time Periods:</label>
                             <div class="template-buttons">
-                                <button class="template-btn" onclick="setTimeLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])">📅 Months</button>
-                                <button class="template-btn" onclick="setTimeLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📊 Quarters</button>
-                                <button class="template-btn" onclick="setTimeLabels(['Week 1', 'Week 2', 'Week 3', 'Week 4'])">📆 Weeks</button>
+                                <button class="template-btn"
+                                    onclick="setTimeLabels(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'])">📅
+                                    Months</button>
+                                <button class="template-btn" onclick="setTimeLabels(['Q1', 'Q2', 'Q3', 'Q4'])">📊
+                                    Quarters</button>
+                                <button class="template-btn"
+                                    onclick="setTimeLabels(['Week 1', 'Week 2', 'Week 3', 'Week 4'])">📆 Weeks</button>
                             </div>
                         </div>
                     </div>
@@ -132,34 +143,37 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Video/Image Controls Tab -->
             <div class="tab-content" id="videoTabContent">
-                
+
                 <!-- Edit Current Slide Section (Always Visible) -->
                 <div class="control-section">
                     <label class="control-label">✏️ Edit Current Slide</label>
-                    
+
                     <div class="edit-content">
                         <!-- Edit Current Video Slide Section -->
                         <div class="accordion-subsection" id="editCurrentVideoSection" style="display: none;">
                             <label class="subsection-label">📹 Edit Video Slide</label>
-                            
+
                             <!-- Video Timeline Preview -->
                             <div class="video-timeline-section">
                                 <div class="timeline-preview">
-                                    <video id="editTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                    <video id="editTimelinePreview" muted playsinline
+                                        style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
                                     <div class="timeline-info">
-                                        <span id="editCurrentTimeDisplay">0:00</span> / <span id="editTotalTimeDisplay">0:00</span>
+                                        <span id="editCurrentTimeDisplay">0:00</span> / <span
+                                            id="editTotalTimeDisplay">0:00</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Timeline Scrubber -->
                                 <div class="timeline-scrubber">
-                                    <input type="range" id="editTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                                    <input type="range" id="editTimelineScrubber" min="0" max="100" value="0"
+                                        class="timeline-slider">
                                 </div>
                             </div>
-                            
+
                             <!-- Edit Segment Controls -->
                             <div class="segment-controls">
                                 <div class="segment-time-inputs">
@@ -174,12 +188,12 @@
                                         <button class="time-set-btn" onclick="setEditEndTime()">🏁 Set End</button>
                                     </div>
                                 </div>
-                                
+
                                 <div class="segment-duration">
                                     Duration: <span id="editSegmentDuration">0s</span>
                                 </div>
                             </div>
-                            
+
                             <!-- Update Button -->
                             <div class="video-action-buttons">
                                 <button class="video-action-btn primary" onclick="updateVideoSlide()">
@@ -187,35 +201,39 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <!-- Edit Current Image Slide Section -->
                         <div class="accordion-subsection" id="editCurrentImageSection" style="display: none;">
                             <label class="subsection-label">🖼️ Edit Image Slide</label>
-                            
+
                             <!-- Video Timeline Preview -->
                             <div class="video-timeline-section">
                                 <div class="timeline-preview">
-                                    <video id="editImageTimelinePreview" muted playsinline style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
+                                    <video id="editImageTimelinePreview" muted playsinline
+                                        style="width: 100%; max-height: 80px; border-radius: 12px; background: #000;"></video>
                                     <div class="timeline-info">
-                                        <span id="editImageCurrentTimeDisplay">0:00</span> / <span id="editImageTotalTimeDisplay">0:00</span>
+                                        <span id="editImageCurrentTimeDisplay">0:00</span> / <span
+                                            id="editImageTotalTimeDisplay">0:00</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Timeline Scrubber -->
                                 <div class="timeline-scrubber">
-                                    <input type="range" id="editImageTimelineScrubber" min="0" max="100" value="0" class="timeline-slider">
+                                    <input type="range" id="editImageTimelineScrubber" min="0" max="100" value="0"
+                                        class="timeline-slider">
                                 </div>
                             </div>
-                            
+
                             <!-- Image Frame Controls -->
                             <div class="segment-controls">
                                 <div class="image-frame-time">
                                     <label>Frame Time:</label>
                                     <div class="time-display" id="editImageFrameTimeDisplay">0:00</div>
-                                    <button class="time-set-btn" onclick="setEditImageFrameTime()">🖼️ Set Frame Time</button>
+                                    <button class="time-set-btn" onclick="setEditImageFrameTime()">🖼️ Set Frame
+                                        Time</button>
                                 </div>
                             </div>
-                            
+
                             <!-- Update Button -->
                             <div class="video-action-buttons">
                                 <button class="video-action-btn primary" onclick="updateImageSlide()">
@@ -223,16 +241,16 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <!-- No Slide Selected Message -->
                         <div class="no-slide-message" id="noSlideSelected">
                             <p>📋 Select a video or image slide to edit its timing</p>
                         </div>
                     </div>
                 </div>
-                
-     
-               
+
+
+
                 <div class="control-section">
                     <label class="control-label">Slide Actions:</label>
                     <div class="slide-controls">
@@ -242,7 +260,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Common Controls Tab -->
             <div class="tab-content" id="commonTabContent">
                 <div class="control-section">
@@ -353,6 +371,101 @@
     <script src="script.js"></script>
     <script src="video-slides.js"></script>
     <link rel="stylesheet" href="video-slides.css">
+
+    <link rel="stylesheet" href="earn-cash-modal.css">
+    <script src="earn-cash-modal.js"></script>
+
+    <!-- Include Phosphor Icons -->
+    <script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
+
+    <!-- Earn Extra Cash Modal HTML Structure -->
+<!-- Add this to your existing index.html just before closing </body> tag -->
+
+<!-- Earn Extra Cash Button -->
+<button class="earn-cash-btn" id="earnCashBtn" onclick="openEarnCashModal()" style="display: none;">
+    💰 Earn Extra Cash
+</button>
+
+<!-- Earn Extra Cash Modal -->
+<div class="earn-cash-modal" id="earnCashModal">
+    <div class="modal-container">
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="modalLoadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p style="color: #667eea; font-weight: 600;">Generating your products...</p>
+            </div>
+        </div>
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <h2 class="modal-title">Earn Extra Cash</h2>
+            <p class="modal-subtitle">Enhance your presentation with professional services</p>
+            <button class="modal-close" onclick="closeEarnCashModal()">
+                <i class="ph ph-x"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+            <!-- Left Side - Products -->
+            <div class="products-section">
+                <div class="products-header">
+                    <h3>Available Services</h3>
+                    <p>Select the services you'd like to add to your presentation. Each service will be generated using AI and delivered ready-to-use.</p>
+                </div>
+
+                <div id="productsContainer">
+                    <!-- Products will be dynamically generated here -->
+                </div>
+            </div>
+
+            <!-- Right Side - Pricing -->
+            <div class="pricing-section">
+                <div class="pricing-header">
+                    <h3>Order Summary</h3>
+                </div>
+
+                <!-- Slide Statistics -->
+                <div class="slide-stats">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Slides</span>
+                        <span class="stat-value" id="totalSlidesCount">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Content Slides (excluding covers)</span>
+                        <span class="stat-value" id="presentationPagesCount">0</span>
+                    </div>
+                </div>
+
+                <!-- Selected Products -->
+                <div class="selected-products">
+                    <div id="selectedProductsList">
+                        <div class="empty-selection">
+                            <i class="ph ph-package" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px; display: block;"></i>
+                            Select services to see pricing
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Section -->
+                <!-- <div class="total-section">
+                 
+                </div> -->
+
+                <!-- Generate Button -->
+                <button class="generate-button" id="generateButton" onclick="generateSelectedProducts()" disabled>
+                    <i class="ph ph-magic-wand"></i>
+                    Generate Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Phosphor Icons -->
+<script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
+
 </body>
 
 </html>

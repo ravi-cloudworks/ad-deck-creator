@@ -1737,6 +1737,10 @@ function extendShowSlide() {
                     if (customizeBtn) {
                         customizeBtn.style.visibility = 'hidden';
                     }
+                    const earnCashBtn = document.getElementById('earnCashBtn');
+if (earnCashBtn) {
+    earnCashBtn.style.display = 'block';
+}
 
                     // Update UI elements
                     const currentSlideSpan = document.getElementById('currentSlide');
@@ -1762,7 +1766,10 @@ function extendShowSlide() {
                 if (customizeBtn) {
                     customizeBtn.style.visibility = 'visible';
                 }
-
+                const earnCashBtn = document.getElementById('earnCashBtn');
+                if (earnCashBtn) {
+                    earnCashBtn.style.display = 'none';
+                }
                 // Try to handle as video slide first
                 const handled = showVideoSlide(index);
 

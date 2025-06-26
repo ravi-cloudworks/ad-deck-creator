@@ -621,7 +621,18 @@ function showSlide(index) {
 
         // Handle customize button visibility for cover slides
         const customizeBtn = document.getElementById('customizeBtn');
+
+        const earnCashBtn = document.getElementById('earnCashBtn');
         const slideToShow = slides[index];
+        
+        if (earnCashBtn && slideToShow) {
+            if (slideToShow.isCoverSlide) {
+                earnCashBtn.style.display = 'block';
+            } else {
+                earnCashBtn.style.display = 'none';
+            }
+        }
+
         if (customizeBtn && slideToShow) {
             if (slideToShow.isCoverSlide) {
                 // FIXED: Auto-close customize panel if open when navigating to cover slide
@@ -634,6 +645,7 @@ function showSlide(index) {
                 customizeBtn.style.visibility = 'visible';
             }
         }
+        
         
         // Validate index and slides array
         if (index < 0 || index >= slides.length || !slides[index]) {
