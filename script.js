@@ -116,6 +116,53 @@ function getCurrentSlideColors() {
     return currentSlide.colors;
 }
 
+function updateColorPicker() {
+    try {
+        const currentSlide = slides[currentSlideIndex];
+        if (!currentSlide || currentSlide.isCoverSlide || currentSlide.isVideoSlide) {
+            // Hide color picker for non-chart slides
+            const colorPalette = document.querySelector('.color-palette-touch');
+            if (colorPalette) {
+                colorPalette.style.display = 'none';
+            }
+            return;
+        }
+
+        const chartType = currentSlide.chartType;
+        const data = sampleData[chartType];
+        if (!data || !data.series) return;
+
+        const seriesCount = data.series.length;
+        const slideColors = getCurrentSlideColors();
+        
+        const colorPalette = document.querySelector('.color-palette-touch');
+        if (!colorPalette) return;
+
+        // Show color palette for chart slides
+        colorPalette.style.display = 'flex';
+        
+        // Clear existing dots
+        colorPalette.innerHTML = '';
+        
+        // Generate dots only for actual data series
+        for (let i = 0; i < seriesCount; i++) {
+            const colorDot = document.createElement('div');
+            colorDot.className = 'touch-color-dot';
+            colorDot.id = `custom-color-${i + 1}`;
+            colorDot.style.background = slideColors[i] || themeColors.custom[i];
+            colorDot.onclick = () => openTouchColorPicker(i);
+            
+            colorPalette.appendChild(colorDot);
+        }
+        
+        console.log(`Updated color picker: ${seriesCount} colors for ${chartType} chart`);
+        
+    } catch (error) {
+        sendErrorToiOS(error, 'from-script.js-colorpicker', 0, 0, error.stack);
+        console.error('Error updating color picker:', error);
+    }
+}
+
 // Toggle customize mode
 function toggleCustomizeMode() {
     // Check if current slide is a cover slide
@@ -167,6 +214,7 @@ function selectChartType(type) {
             slides[currentSlideIndex].chartType = type;
             updateChart();
             generateDataSliders(); // Generate sliders for new chart type
+            updateColorPicker(); // ADD THIS LINE
         }
     } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in selectChartType:', error);
@@ -654,6 +702,7 @@ function showSlide(index) {
         // Update chart and generate sliders
         updateChart();
         generateDataSliders();
+        updateColorPicker(); // ADD THIS LINE
     } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error in showSlide:', error);
     }
@@ -672,7 +721,8 @@ function updateColorDots(colors) {
                 colorDot.style.background = colors[i];
             }
         }
-        console.log('Color dots updated successfully');
+        updateColorPicker();
+        console.log('updateColorDots called - delegated to updateColorPicker');
     } catch (error) { sendErrorToiOS(error, 'from-script.js', 0, 0, error.stack);
         console.error('Error updating color dots:', error);
     }
