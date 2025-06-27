@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Chart Presentation Tool</title>
+    <title>Aristotle Deck Designer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -276,7 +276,29 @@
                         </button>
                     </div>
                 </div>
-
+                <div class="control-section">
+                    <label class="control-label">Title Color:</label>
+                    <div class="title-color-section">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoTitleColor" checked onchange="updateAllTitleColors()">
+                            <span class="slider"></span>
+                            <span class="toggle-label">Auto-detect</span>
+                        </label>
+                        <button class="manual-title-color" id="manualTitleBtn" onclick="openTitleColorPicker()">
+                            🎨 Brand Color
+                        </button>
+                    </div>
+                    <div class="brand-color-presets">
+                        <button class="brand-preset" style="background: #1f4e79;" onclick="setBrandTitleColor('#1f4e79')" title="Corporate Blue"></button>
+                        <button class="brand-preset" style="background: #d83b01;" onclick="setBrandTitleColor('#d83b01')" title="Brand Orange"></button>
+                        <button class="brand-preset" style="background: #107c10;" onclick="setBrandTitleColor('#107c10')" title="Success Green"></button>
+                        <button class="brand-preset" style="background: #5c2d91;" onclick="setBrandTitleColor('#5c2d91')" title="Premium Purple"></button>
+                        <button class="brand-preset" style="background: #e81123;" onclick="setBrandTitleColor('#e81123')" title="Attention Red"></button>
+                        <button class="brand-preset" style="background: #000000;" onclick="setBrandTitleColor('#000000')" title="Classic Black"></button>
+                        <button class="brand-preset" style="background: #ffffff; border: 2px solid #ddd;" onclick="setBrandTitleColor('#ffffff')" title="Pure White"></button>
+                        <button class="brand-preset" style="background: #605e5c;" onclick="setBrandTitleColor('#605e5c')" title="Professional Gray"></button>
+                    </div>
+                </div>
                 <!-- <div class="control-section">
                     <label class="control-label">Background Image:</label>
                     <div class="bg-controls">
@@ -301,6 +323,9 @@
                         </button>
                         <button class="slide-btn" onclick="addImageSlide()">
                             🖼️ Add Image Slide
+                        </button>
+                        <button class="slide-btn" onclick="openTextImportModal()">
+                            📝 Import Content
                         </button>
                     </div>
                     <div class="slide-counter-big">
@@ -377,94 +402,180 @@
 
     <!-- Include Phosphor Icons -->
     <script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
+    
 
     <!-- Earn Extra Cash Modal HTML Structure -->
-<!-- Add this to your existing index.html just before closing </body> tag -->
+    <!-- Add this to your existing index.html just before closing </body> tag -->
 
-<!-- Earn Extra Cash Button -->
-<button class="earn-cash-btn" id="earnCashBtn" onclick="openEarnCashModal()" style="display: none;">
-    💰 Earn Extra Cash
-</button>
+    <!-- Earn Extra Cash Button -->
+    <button class="earn-cash-btn" id="earnCashBtn" onclick="openEarnCashModal()" style="display: none;">
+        💰 Earn Extra Cash
+    </button>
 
-<!-- Earn Extra Cash Modal -->
-<div class="earn-cash-modal" id="earnCashModal">
-    <div class="modal-container">
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="modalLoadingOverlay">
-            <div class="loading-content">
-                <div class="loading-spinner"></div>
-                <p style="color: #667eea; font-weight: 600;">Generating your products...</p>
+    <!-- Earn Extra Cash Modal -->
+    <div class="earn-cash-modal" id="earnCashModal">
+        <div class="modal-container">
+            <!-- Loading Overlay -->
+            <div class="loading-overlay" id="modalLoadingOverlay">
+                <div class="loading-content">
+                    <div class="loading-spinner"></div>
+                    <p style="color: #667eea; font-weight: 600;">Generating your products...</p>
+                </div>
+            </div>
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h2 class="modal-title">Earn Extra Cash</h2>
+                <p class="modal-subtitle">Enhance your presentation with professional services</p>
+                <button class="modal-close" onclick="closeEarnCashModal()">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Left Side - Products -->
+                <div class="products-section">
+                    <div class="products-header">
+                        <h3>Available Services</h3>
+                        <p>Select the services you'd like to add to your presentation. Each service will be generated
+                            using AI and delivered ready-to-use.</p>
+                    </div>
+
+                    <div id="productsContainer">
+                        <!-- Products will be dynamically generated here -->
+                    </div>
+                </div>
+
+                <!-- Right Side - Pricing -->
+                <div class="pricing-section">
+                    <div class="pricing-header">
+                        <h3>Order Summary</h3>
+                    </div>
+
+                    <!-- Slide Statistics -->
+                    <div class="slide-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Total Slides</span>
+                            <span class="stat-value" id="totalSlidesCount">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Content Slides (excluding covers)</span>
+                            <span class="stat-value" id="presentationPagesCount">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Products -->
+                    <div class="selected-products">
+                        <div id="selectedProductsList">
+                            <div class="empty-selection">
+                                <i class="ph ph-package"
+                                    style="font-size: 48px; color: #d1d5db; margin-bottom: 16px; display: block;"></i>
+                                Select services to see pricing
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Section -->
+                    <!-- <div class="total-section">
+                 
+                </div> -->
+
+                    <!-- Generate Button -->
+                    <button class="generate-button" id="generateButton" onclick="generateSelectedProducts()" disabled>
+                        <i class="ph ph-magic-wand"></i>
+                        Generate Now
+                    </button>
+                </div>
             </div>
         </div>
+    </div>
 
+    <!-- Include Phosphor Icons -->
+    <script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
+
+
+
+
+<!-- Text Import Modal -->
+<div class="text-import-modal" id="textImportModal" style="display: none;">
+    <div class="text-import-container">
         <!-- Modal Header -->
-        <div class="modal-header">
-            <h2 class="modal-title">Earn Extra Cash</h2>
-            <p class="modal-subtitle">Enhance your presentation with professional services</p>
-            <button class="modal-close" onclick="closeEarnCashModal()">
+        <div class="text-import-header">
+            <div class="header-content">
+                <i class="ph ph-file-text" style="font-size: 24px; color: #667eea;"></i>
+                <h2>Import Content</h2>
+                <p>Paste your titles and content to update all slides at once</p>
+            </div>
+            <button class="text-import-close" onclick="closeTextImportModal()">
                 <i class="ph ph-x"></i>
             </button>
         </div>
 
-        <!-- Modal Body -->
-        <div class="modal-body">
-            <!-- Left Side - Products -->
-            <div class="products-section">
-                <div class="products-header">
-                    <h3>Available Services</h3>
-                    <p>Select the services you'd like to add to your presentation. Each service will be generated using AI and delivered ready-to-use.</p>
+        <!-- Main Content Area -->
+        <div class="text-import-body">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="section-header">
+                    <i class="ph ph-clipboard-text"></i>
+                    <h3>Your Content</h3>
                 </div>
-
-                <div id="productsContainer">
-                    <!-- Products will be dynamically generated here -->
+                
+                <div class="textarea-container">
+                    <textarea 
+                        id="textImportArea"
+                        placeholder="Monthly Sales Analysis
+--
+Key Findings
+• Revenue increased by 15% this quarter
+• Digital channels outperformed traditional media
+• Mobile engagement shows highest ROI
+--
+Next Steps
+TEXT_OVERLAY: Implement unified messaging strategy across all platforms"
+                        autofocus>
+                    </textarea>
+                    <div class="paste-hint">
+                        <i class="ph ph-cursor-text"></i>
+                        Tap here and paste your content
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Side - Pricing -->
-            <div class="pricing-section">
-                <div class="pricing-header">
-                    <h3>Order Summary</h3>
+            <!-- Preview Section -->
+            <div class="preview-section">
+                <div class="section-header">
+                    <i class="ph ph-eye"></i>
+                    <h3>Preview</h3>
                 </div>
-
-                <!-- Slide Statistics -->
-                <div class="slide-stats">
-                    <div class="stat-row">
-                        <span class="stat-label">Total Slides</span>
-                        <span class="stat-value" id="totalSlidesCount">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span class="stat-label">Content Slides (excluding covers)</span>
-                        <span class="stat-value" id="presentationPagesCount">0</span>
+                
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-placeholder">
+                        <i class="ph ph-arrow-left"></i>
+                        Paste content to see preview
                     </div>
                 </div>
-
-                <!-- Selected Products -->
-                <div class="selected-products">
-                    <div id="selectedProductsList">
-                        <div class="empty-selection">
-                            <i class="ph ph-package" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px; display: block;"></i>
-                            Select services to see pricing
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Section -->
-                <!-- <div class="total-section">
-                 
-                </div> -->
-
-                <!-- Generate Button -->
-                <button class="generate-button" id="generateButton" onclick="generateSelectedProducts()" disabled>
-                    <i class="ph ph-magic-wand"></i>
-                    Generate Now
-                </button>
             </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-import-actions">
+            <button class="action-btn secondary" onclick="closeTextImportModal()">
+                <i class="ph ph-x"></i>
+                Cancel
+            </button>
+            <button class="action-btn primary" id="applyTextBtn" onclick="applyTextToSlides()" disabled>
+                <i class="ph ph-check"></i>
+                Apply to Slides
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Include Phosphor Icons -->
-<script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
+
+<!-- ADD CSS AND JS REFERENCES HERE -->
+<link rel="stylesheet" href="text-import.css">
+<script src="text-import.js"></script>
 
 </body>
 

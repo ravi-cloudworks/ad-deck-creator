@@ -125,11 +125,14 @@
     font-size: 32px;
     font-weight: 700;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     text-align: center;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block !important; /* Force display for video/image slides */
+    padding: 0 40px; /* Add padding for better spacing */
+    line-height: 1.2; /* Clean line height */
+    letter-spacing: -0.5px; /* Tighter letter spacing for modern look */
 }
-
 /* Responsive Design for iPad */
 @media (max-width: 1024px) {
     .video-container,

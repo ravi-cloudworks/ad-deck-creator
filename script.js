@@ -52,9 +52,9 @@ function init() {
             const editorTextarea = document.getElementById('editor');
             if (editorTextarea && !editorTextarea.value.trim()) {
                 editorTextarea.value = `{
-  "front-cover": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/prompt_title_page/9223372036834525189/9223372035104551163_frontcoverpage_1750224615.png",
-  "last-cover": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/prompt_last_page/9223372036834525189/9223372035104551162_lastcoverpage_1750224626.png",
-  "background": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/background_image/DeckBackground.png",
+  "front-cover": "images/BAIBA-FRONT-COVER.png",
+  "last-cover": "images/BAIBA-BACK-COVER-2.png",
+  "background": "images/BAIBA-BACKGROUND-IMG.png",
   "video-source": "https://d126fksy3907xn.cloudfront.net/userfiles/BX8kitlZ9GoE0z0NEu711t9JSI%2BbhvUsdCMWBCneA2M%3D/campaign/campaign_video/9223372036834525195/9223372035105057290_SampleAdV1.mp4",
   "video-ads": "ad-0s-15s_img-16s-30s_img-31s_ad-32s-60s",
   "campaign-id": "1003_0107BA97A8261750670645",

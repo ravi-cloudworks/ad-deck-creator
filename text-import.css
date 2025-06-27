@@ -1,0 +1,429 @@
+/* Text Import Modal Styles */
+.text-import-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 3500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.text-import-container {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 900px;
+    height: 85vh;
+    max-height: 700px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header */
+.text-import-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.header-content h2 {
+    margin: 8px 0 5px 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.header-content p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.text-import-close {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.text-import-close:hover,
+.text-import-close:active {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Body */
+.text-import-body {
+    flex: 1;
+    display: flex;
+    padding: 30px;
+    gap: 30px;
+    overflow: hidden;
+}
+
+.input-section,
+.preview-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.section-header i {
+    font-size: 20px;
+    color: #667eea;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Textarea */
+.textarea-container {
+    flex: 1;
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.textarea-container:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#textImportArea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    color: #333;
+}
+
+#textImportArea::placeholder {
+    color: #6c757d;
+    opacity: 0.7;
+}
+
+.paste-hint {
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #6c757d;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.paste-hint i {
+    font-size: 16px;
+}
+
+/* Preview */
+.preview-container {
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.preview-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #6c757d;
+    font-size: 16px;
+    gap: 10px;
+}
+
+.preview-placeholder i {
+    font-size: 24px;
+    opacity: 0.5;
+}
+
+.preview-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.preview-slide-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 8px;
+}
+
+.preview-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.preview-bullets {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+}
+
+.preview-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555;
+}
+
+.preview-bullets li::before {
+    content: "•";
+    color: #667eea;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+.preview-overlay {
+    background: rgba(102, 126, 234, 0.1);
+    border-left: 4px solid #667eea;
+    padding: 10px 15px;
+    margin-top: 8px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14px;
+    color: #333;
+}
+
+.preview-overlay::before {
+    content: "📎 Text Overlay: ";
+    font-weight: 600;
+    color: #667eea;
+}
+
+/* Actions */
+.text-import-actions {
+    padding: 25px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.action-btn.primary {
+    background: #667eea;
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.primary:hover:not(:disabled) {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.action-btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.action-btn.secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .text-import-container {
+        width: 95%;
+        height: 90vh;
+    }
+    
+    .text-import-body {
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .input-section,
+    .preview-section {
+        min-height: 200px;
+    }
+    
+    .text-import-actions {
+        flex-direction: column;
+        padding: 20px;
+    }
+    
+    .action-btn {
+        width: 100%;
+    }
+}
+
+/* Hide paste hint when textarea has content */
+.textarea-container:focus-within .paste-hint,
+.textarea-container.has-content .paste-hint {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Title Color Controls */
+.title-color-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.title-color-section .toggle-switch {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.manual-title-color {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    background: #667eea;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.manual-title-color:active {
+    transform: scale(0.98);
+    background: #5a67d8;
+}
+
+.manual-title-color:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #ccc;
+}
+
+.brand-color-presets {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.brand-preset {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.brand-preset:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.brand-preset:active {
+    transform: scale(0.95);
+}
+
+.brand-preset.selected {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px #667eea;
+}
+
+.brand-preset::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+.brand-preset.selected::after {
+    opacity: 1;
+}

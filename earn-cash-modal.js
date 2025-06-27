@@ -329,7 +329,7 @@ function updatePricingDisplay() {
                 <span style="font-size: 18px; font-weight: 700; color: #10b981;">${totalCredits} Credits</span>
             </div>
             <div style="font-size: 12px; color: #6b7280; text-align: center; font-style: italic;">
-                Price Per Credit = ${pricingPerPage.toFixed(2)}
+                Price Per Credit = $${pricingPerPage.toFixed(0)}
             </div>
         `;
         selectedProductsList.appendChild(totalSection);

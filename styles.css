@@ -706,13 +706,17 @@ input:checked + .slider:before {
 }
 
 .slide-title {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     text-align: center;
+    display: block; /* Always show titles */
+    padding: 0 40px; /* Consistent padding */
+    line-height: 1.2; /* Clean line height */
+    letter-spacing: -0.5px; /* Modern typography */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle depth */
 }
-
 
 
 .navigation {
